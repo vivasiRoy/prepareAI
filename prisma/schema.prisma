@@ -1,0 +1,286 @@
+// This is your Prisma schema file
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+enum EventType {
+  SOFTWARE_INTERVIEW
+  JOB_INTERVIEW
+  ACADEMIC_EXAM
+  CERTIFICATION_EXAM
+  PRESENTATION
+  SALES_PITCH
+  NEGOTIATION
+  COURT_CASE
+  OTHER
+}
+
+enum EventStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  ARCHIVED
+}
+
+enum MaterialType {
+  DOCUMENT
+  URL
+  TEXT
+  VIDEO
+}
+
+enum LessonType {
+  MICRO_LESSON
+  FLASHCARD
+  QUIZ
+  SIMULATION
+  MOCK_INTERVIEW
+  MOCK_EXAM
+  READING
+}
+
+enum QuizType {
+  MCQ
+  FREE_RESPONSE
+  TRUE_FALSE
+  CODE
+  SCENARIO
+}
+
+model User {
+  id                   String    @id @default(cuid())
+  name                 String?
+  email                String    @unique
+  emailVerified        DateTime?
+  image                String?
+  password             String?
+  role                 Role      @default(USER)
+  plan                 Plan      @default(FREE)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  accounts           Account[]
+  sessions           Session[]
+  events             Event[]
+  subscription       Subscription?
+  performanceMetrics PerformanceMetrics[]
+  attempts           Attempt[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Event {
+  id           String      @id @default(cuid())
+  userId       String
+  title        String
+  type         EventType
+  description  String      @db.Text
+  goalOutcome  String      @db.Text
+  targetDate   DateTime
+  status       EventStatus @default(ACTIVE)
+  successScore Float       @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  materials  EventMaterial[]
+  curriculum Curriculum?
+  goals      EventGoal[]
+  metrics    PerformanceMetrics[]
+}
+
+model EventGoal {
+  id       String  @id @default(cuid())
+  eventId  String
+  title    String  @db.Text
+  priority Int     @default(1)
+  achieved Boolean @default(false)
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model EventMaterial {
+  id               String       @id @default(cuid())
+  eventId          String
+  type             MaterialType
+  name             String
+  url              String?
+  content          String?      @db.Text
+  extractedContent String?      @db.Text
+  processed        Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Curriculum {
+  id            String   @id @default(cuid())
+  eventId       String   @unique
+  totalDays     Int
+  currentDay    Int      @default(1)
+  generated     Boolean  @default(false)
+  outline       Json
+  domainContext Json?
+  skillTree     Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+}
+
+model Lesson {
+  id           String     @id @default(cuid())
+  curriculumId String
+  dayNumber    Int
+  title        String
+  type         LessonType
+  content      Json
+  duration     Int
+  difficulty   Int        @default(3)
+  order        Int        @default(0)
+  completed    Boolean    @default(false)
+  completedAt  DateTime?
+  aiGenerated  Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  curriculum Curriculum @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  quizzes    Quiz[]
+  attempts   Attempt[]
+}
+
+model Quiz {
+  id            String   @id @default(cuid())
+  lessonId      String
+  question      String   @db.Text
+  type          QuizType
+  options       Json?
+  correctAnswer String   @db.Text
+  explanation   String?  @db.Text
+  difficulty    Int      @default(3)
+  tags          String[]
+
+  lesson   Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  attempts Attempt[]
+}
+
+model Attempt {
+  id         String   @id @default(cuid())
+  userId     String
+  lessonId   String?
+  quizId     String?
+  response   String   @db.Text
+  score      Float
+  timeSpent  Int
+  confidence Int?
+  feedback   String?  @db.Text
+  isCorrect  Boolean?
+  createdAt  DateTime @default(now())
+
+  lesson Lesson? @relation(fields: [lessonId], references: [id])
+  quiz   Quiz?   @relation(fields: [quizId], references: [id])
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PerformanceMetrics {
+  id                  String   @id @default(cuid())
+  userId              String
+  eventId             String
+  date                DateTime @default(now())
+  successScore        Float    @default(0)
+  accuracyRate        Float    @default(0)
+  avgTimePerQuestion  Int      @default(0)
+  questionsAnswered   Int      @default(0)
+  topicsStrong        Json     @default("[]")
+  topicsWeak          Json     @default("[]")
+  retentionScore      Float    @default(0)
+  streak              Int      @default(0)
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId, date])
+}
+
+model LLMUsageLog {
+  id           String   @id @default(cuid())
+  userId       String?
+  provider     String
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  costUsd      Float
+  feature      String
+  latencyMs    Int?
+  createdAt    DateTime @default(now())
+}
+
+model Subscription {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  stripeSubscriptionId String   @unique
+  stripePriceId        String
+  status               String
+  plan                 Plan
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

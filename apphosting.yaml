@@ -1,0 +1,89 @@
+runConfig:
+  runtime: nodejs20
+  concurrency: 80
+  maxInstances: 10
+  minInstances: 0
+  cpu: 1
+  memoryMiB: 512
+
+env:
+  - variable: NEXTAUTH_URL
+    value: https://prepareai-777.web.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://prepareai-777.web.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: DATABASE_URL
+    secret: DATABASE_URL
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: DIRECT_URL
+    secret: DIRECT_URL
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: REDIS_URL
+    secret: REDIS_URL
+    availability:
+      - RUNTIME
+  - variable: NEXTAUTH_SECRET
+    secret: NEXTAUTH_SECRET
+    availability:
+      - RUNTIME
+  - variable: ANTHROPIC_API_KEY
+    secret: ANTHROPIC_API_KEY
+    availability:
+      - RUNTIME
+  - variable: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
+    availability:
+      - RUNTIME
+  - variable: GOOGLE_CLIENT_ID
+    secret: GOOGLE_CLIENT_ID
+    availability:
+      - RUNTIME
+  - variable: GOOGLE_CLIENT_SECRET
+    secret: GOOGLE_CLIENT_SECRET
+    availability:
+      - RUNTIME
+  - variable: GITHUB_CLIENT_ID
+    secret: GITHUB_CLIENT_ID
+    availability:
+      - RUNTIME
+  - variable: GITHUB_CLIENT_SECRET
+    secret: GITHUB_CLIENT_SECRET
+    availability:
+      - RUNTIME
+  - variable: STRIPE_SECRET_KEY
+    secret: STRIPE_SECRET_KEY
+    availability:
+      - RUNTIME
+  - variable: STRIPE_WEBHOOK_SECRET
+    secret: STRIPE_WEBHOOK_SECRET
+    availability:
+      - RUNTIME
+  - variable: STRIPE_PRO_PRICE_ID
+    secret: STRIPE_PRO_PRICE_ID
+    availability:
+      - RUNTIME
+  - variable: STRIPE_ENTERPRISE_PRICE_ID
+    secret: STRIPE_ENTERPRISE_PRICE_ID
+    availability:
+      - RUNTIME
+  - variable: DEFAULT_LLM_PROVIDER
+    value: anthropic
+    availability:
+      - RUNTIME
+  - variable: DEFAULT_MODEL
+    value: claude-sonnet-4-5-20251001
+    availability:
+      - RUNTIME
+  - variable: ADMIN_EMAIL
+    value: royvivasi@gmail.com
+    availability:
+      - RUNTIME

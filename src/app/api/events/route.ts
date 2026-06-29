@@ -1,0 +1,100 @@
+import { NextResponse } from 'next/server'
+import { getServerSession } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { generateCurriculum } from '@/lib/engine/adaptiveCurriculumEngine'
+import { PLAN_FEATURES } from '@/types'
+import { z } from 'zod'
+
+const createEventSchema = z.object({
+  title: z.string().min(1).max(200),
+  type: z.enum(['INTERVIEW','EXAM','CERTIFICATION','PRESENTATION','MEETING','SALES_PITCH','NEGOTIATION','COURT_CASE','ACADEMIC_ASSESSMENT','OTHER']),
+  description: z.string().min(10).max(2000),
+  goalOutcome: z.string().min(10).max(1000),
+  targetDate: z.string().datetime(),
+})
+
+export async function GET(req: Request) {
+  const session = await getServerSession()
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const { searchParams } = new URL(req.url)
+  const status = searchParams.get('status') || 'ACTIVE'
+  const page = parseInt(searchParams.get('page') || '1')
+  const limit = parseInt(searchParams.get('limit') || '10')
+
+  const [events, total] = await Promise.all([
+    prisma.event.findMany({
+      where: { userId: session.user.id, status: status as any },
+      include: {
+        curriculum: { select: { id: true, totalDays: true, currentDay: true, generated: true } },
+        goals: true,
+        _count: { select: { materials: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    }),
+    prisma.event.count({ where: { userId: session.user.id, status: status as any } }),
+  ])
+
+  return NextResponse.json({ data: { items: events, total, page, limit, hasMore: page * limit < total }, success: true })
+}
+
+export async function POST(req: Request) {
+  const session = await getServerSession()
+  if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const body = await req.json()
+  const parsed = createEventSchema.safeParse(body)
+  if (!parsed.success) return NextResponse.json({ error: 'Invalid input', details: parsed.error.flatten(), success: false }, { status: 400 })
+
+  const features = PLAN_FEATURES[session.user.plan]
+  const activeCount = await prisma.event.count({ where: { userId: session.user.id, status: 'ACTIVE' } })
+  if (activeCount >= features.maxEvents) {
+    return NextResponse.json({ error: 'Plan limit reached. Upgrade to create more events.', success: false }, { status: 403 })
+  }
+
+  const event = await prisma.event.create({
+    data: {
+      userId: session.user.id,
+      title: parsed.data.title,
+      type: parsed.data.type,
+      description: parsed.data.description,
+      goalOutcome: parsed.data.goalOutcome,
+      targetDate: new Date(parsed.data.targetDate),
+    },
+    include: {
+      curriculum: true, goals: true, materials: true, metrics: true,
+      user: { select: { id: true, name: true, email: true, image: true } },
+    },
+  })
+
+  generateCurriculum({ event: event as any, userId: session.user.id, plan: session.user.plan })
+    .then(async (result) => {
+      const curriculum = await prisma.curriculum.create({
+        data: {
+          eventId: event.id,
+          totalDays: result.lessons.length,
+          generated: true,
+          outline: result.outline as any,
+          skillTree: result.skillTree as any,
+          domainContext: result.domainContext as any,
+        },
+      })
+      await prisma.lesson.createMany({
+        data: result.lessons.map((l) => ({
+          curriculumId: curriculum.id,
+          dayNumber: l.dayNumber,
+          title: l.title,
+          type: l.type,
+          content: l.content as any,
+          duration: l.duration,
+          difficulty: l.difficulty,
+          order: l.order,
+        })),
+      })
+    })
+    .catch(console.error)
+
+  return NextResponse.json({ data: event, success: true }, { status: 201 })
+}
