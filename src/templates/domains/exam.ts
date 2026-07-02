@@ -4,7 +4,7 @@ import { EventType } from '@prisma/client'
 export const examTemplate: DomainTemplate = {
   id: 'exam',
   name: 'Exam & Certification',
-  eventTypes: [EventType.EXAM, EventType.CERTIFICATION, EventType.ACADEMIC_ASSESSMENT],
+  eventTypes: [EventType.ACADEMIC_EXAM, EventType.CERTIFICATION_EXAM],
   typicalDuration: 21,
   coreTopics: [
     'Core Subject Matter Review', 'Practice Problem Sets', 'Exam Format & Strategy',

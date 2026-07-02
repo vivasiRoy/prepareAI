@@ -2,9 +2,18 @@ import OpenAI from 'openai'
 import type { LLMRequestOptions, LLMResponse } from '@/types'
 import { estimateCost } from './providers'
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+let _client: OpenAI | null = null
+function getClient(): OpenAI {
+  if (!_client) {
+    const apiKey = process.env.OPENAI_API_KEY
+    if (!apiKey) throw new Error('OPENAI_API_KEY environment variable is not set')
+    _client = new OpenAI({ apiKey })
+  }
+  return _client
+}
 
 export async function callOpenAI(options: LLMRequestOptions): Promise<LLMResponse> {
+  const client = getClient()
   const model = options.model || 'gpt-4.1'
   const maxTokens = options.maxTokens || 4096
   const temperature = options.temperature ?? 0.7

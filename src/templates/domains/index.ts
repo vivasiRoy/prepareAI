@@ -16,7 +16,8 @@ export function getDomainTemplate(eventType: EventType, description: string = ''
   const desc = description.toLowerCase()
 
   if (
-    eventType === EventType.INTERVIEW ||
+    eventType === EventType.SOFTWARE_INTERVIEW ||
+    eventType === EventType.JOB_INTERVIEW ||
     desc.includes('interview') || desc.includes('software') ||
     desc.includes('engineer') || desc.includes('developer') || desc.includes('coding')
   ) {
@@ -24,9 +25,8 @@ export function getDomainTemplate(eventType: EventType, description: string = ''
   }
 
   if (
-    eventType === EventType.EXAM ||
-    eventType === EventType.CERTIFICATION ||
-    eventType === EventType.ACADEMIC_ASSESSMENT ||
+    eventType === EventType.ACADEMIC_EXAM ||
+    eventType === EventType.CERTIFICATION_EXAM ||
     desc.includes('exam') || desc.includes('test') || desc.includes('certif')
   ) {
     return examTemplate
@@ -43,7 +43,6 @@ export function getDomainTemplate(eventType: EventType, description: string = ''
   if (
     eventType === EventType.PRESENTATION ||
     eventType === EventType.SALES_PITCH ||
-    eventType === EventType.MEETING ||
     desc.includes('pitch') || desc.includes('present') || desc.includes('meeting')
   ) {
     return presentationTemplate

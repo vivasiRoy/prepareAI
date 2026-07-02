@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PlayCircle, FileText, BarChart3, Edit, Calendar, Target, BookOpen } from 'lucide-react'
+import { PlayCircle, FileText, BarChart3, Edit, Calendar, Target, BookOpen, Zap } from 'lucide-react'
 import type { EventWithRelations } from '@/types'
 
 export default async function EventDetailPage({ params }: { params: { eventId: string } }) {
@@ -62,6 +62,17 @@ export default async function EventDetailPage({ params }: { params: { eventId: s
         </div>
         <div className="flex items-center gap-3">
           <Link href={`/events/${event.id}/edit`}><Button variant="outline" size="sm" className="border-white/20"><Edit className="w-4 h-4 mr-1.5" /> Edit</Button></Link>
+          <Link href={`/events/${event.id}/mock-exam`}>
+            <Button variant="outline" size="sm" className={
+              daysUntil <= 3 ? 'border-red-500/60 text-red-400 hover:bg-red-500/10 animate-pulse' :
+              daysUntil <= 7 ? 'border-red-500/50 text-red-400 hover:bg-red-500/10' :
+              daysUntil <= 14 ? 'border-yellow-500/40 text-yellow-400 hover:bg-yellow-500/10' :
+              'border-white/20'
+            }>
+              <Zap className="w-4 h-4 mr-1.5" />
+              {daysUntil <= 7 ? `Mock Exam (${daysUntil}d!)` : 'Mock Exam'}
+            </Button>
+          </Link>
           <Link href={`/events/${event.id}/learn`}><Button variant="gradient"><PlayCircle className="w-4 h-4 mr-1.5" /> Start Session</Button></Link>
         </div>
       </div>

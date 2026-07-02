@@ -18,24 +18,35 @@ export function Navbar() {
   }, [])
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'bg-navy-900/95 backdrop-blur-md border-b border-white/10' : 'bg-transparent'}`}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      scrolled
+        ? 'bg-surface-0/90 backdrop-blur-xl border-b border-white/[0.06]'
+        : 'bg-transparent'
+    }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 rounded-xl bg-gradient-brand flex items-center justify-center shadow-brand">
               <Zap className="w-4 h-4 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">
-              PrepareAI
-            </span>
+            <span className="text-lg font-bold gradient-text">PrepareAI</span>
           </Link>
 
+          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="#features" className="text-sm text-gray-400 hover:text-white transition-colors">Features</Link>
-            <Link href="#pricing" className="text-sm text-gray-400 hover:text-white transition-colors">Pricing</Link>
-            <Link href="#use-cases" className="text-sm text-gray-400 hover:text-white transition-colors">Use Cases</Link>
+            {['Features', 'Pricing', 'Use Cases'].map(label => (
+              <Link
+                key={label}
+                href={`#${label.toLowerCase().replace(' ', '-')}`}
+                className="text-sm text-gray-500 hover:text-white transition-colors"
+              >
+                {label}
+              </Link>
+            ))}
           </div>
 
+          {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
             {session ? (
               <Link href="/dashboard">
@@ -49,26 +60,47 @@ export function Navbar() {
             )}
           </div>
 
-          <button className="md:hidden text-gray-400 hover:text-white" onClick={() => setIsOpen(!isOpen)}>
+          {/* Mobile toggle */}
+          <button
+            className="md:hidden text-gray-400 hover:text-white transition-colors"
+            onClick={() => setIsOpen(!isOpen)}
+          >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
       </div>
 
+      {/* Mobile menu */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-navy-900/98 backdrop-blur-md border-b border-white/10"
+            className="md:hidden bg-surface-1/95 backdrop-blur-xl border-b border-white/[0.06]"
           >
-            <div className="px-4 py-4 space-y-3">
-              <Link href="#features" className="block text-gray-400 hover:text-white py-2" onClick={() => setIsOpen(false)}>Features</Link>
-              <Link href="#pricing" className="block text-gray-400 hover:text-white py-2" onClick={() => setIsOpen(false)}>Pricing</Link>
-              <div className="pt-2 space-y-2">
-                <Link href="/signin" className="block"><Button variant="ghost" className="w-full">Sign In</Button></Link>
-                <Link href="/signin" className="block"><Button variant="gradient" className="w-full">Start Free</Button></Link>
+            <div className="px-4 py-4 space-y-1">
+              {[
+                { label: 'Features', href: '#features' },
+                { label: 'Pricing', href: '#pricing' },
+                { label: 'Use Cases', href: '#use-cases' },
+              ].map(({ label, href }) => (
+                <Link
+                  key={label}
+                  href={href}
+                  className="block text-gray-400 hover:text-white py-2.5 px-2 rounded-lg hover:bg-white/[0.04] transition-all"
+                  onClick={() => setIsOpen(false)}
+                >
+                  {label}
+                </Link>
+              ))}
+              <div className="pt-3 space-y-2 border-t border-white/[0.06]">
+                <Link href="/signin" className="block">
+                  <Button variant="ghost" className="w-full">Sign In</Button>
+                </Link>
+                <Link href="/signin" className="block">
+                  <Button variant="gradient" className="w-full">Start Free</Button>
+                </Link>
               </div>
             </div>
           </motion.div>

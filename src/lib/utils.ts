@@ -70,15 +70,14 @@ export function slugify(str: string): string {
 
 export function getEventTypeLabel(type: string): string {
   const labels: Record<string, string> = {
-    INTERVIEW: 'Job Interview',
-    EXAM: 'Exam',
-    CERTIFICATION: 'Certification',
+    SOFTWARE_INTERVIEW: 'Software Interview',
+    JOB_INTERVIEW: 'Job Interview',
+    ACADEMIC_EXAM: 'Academic Exam',
+    CERTIFICATION_EXAM: 'Certification',
     PRESENTATION: 'Presentation',
-    MEETING: 'Meeting',
     SALES_PITCH: 'Sales Pitch',
     NEGOTIATION: 'Negotiation',
     COURT_CASE: 'Court Case',
-    ACADEMIC_ASSESSMENT: 'Academic Assessment',
     OTHER: 'Other',
   }
   return labels[type] || type

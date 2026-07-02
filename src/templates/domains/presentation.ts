@@ -4,7 +4,7 @@ import { EventType } from '@prisma/client'
 export const presentationTemplate: DomainTemplate = {
   id: 'presentation',
   name: 'Presentation & Pitch',
-  eventTypes: [EventType.PRESENTATION, EventType.SALES_PITCH, EventType.MEETING],
+  eventTypes: [EventType.PRESENTATION, EventType.SALES_PITCH],
   typicalDuration: 14,
   coreTopics: [
     'Story Structure & Narrative Arc', 'Opening Hooks & Attention Grabbers',

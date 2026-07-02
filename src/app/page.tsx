@@ -16,24 +16,28 @@ const useCases = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0F172A]">
+    <div className="min-h-screen bg-surface-0">
       <Navbar />
       <Hero />
 
       {/* Use cases */}
-      <section id="use-cases" className="py-24 px-4 bg-gradient-to-b from-transparent to-purple-900/10">
+      <section id="use-cases" className="py-24 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Built for Every High-Stakes Event</h2>
-            <p className="text-gray-400 text-lg">Whatever you're preparing for, PrepareAI has you covered</p>
+            <p className="text-violet-400 text-sm font-semibold tracking-widest uppercase mb-3">Use Cases</p>
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Built for Every High-Stakes Event</h2>
+            <p className="text-gray-400 text-lg">Whatever you&apos;re preparing for, PrepareAI has you covered</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {useCases.map((uc) => (
-              <div key={uc.type} className="glass-card rounded-xl p-6 hover:border-purple-500/30 transition-all group cursor-default">
-                <div className="text-4xl mb-4">{uc.emoji}</div>
-                <h3 className="text-lg font-semibold text-white mb-1">{uc.type}</h3>
-                <p className="text-purple-400 text-sm font-medium mb-3">{uc.outcome}</p>
-                <p className="text-gray-400 text-sm">{uc.desc}</p>
+              <div
+                key={uc.type}
+                className="group p-6 rounded-xl border border-white/[0.07] bg-white/[0.025] hover:border-violet-500/25 hover:bg-white/[0.04] hover:shadow-[0_0_30px_-8px_rgba(124,58,237,0.25)] transition-all duration-300 cursor-default"
+              >
+                <div className="text-3xl mb-4">{uc.emoji}</div>
+                <h3 className="text-base font-semibold text-white mb-1">{uc.type}</h3>
+                <p className="text-violet-400 text-xs font-semibold uppercase tracking-wide mb-3">{uc.outcome}</p>
+                <p className="text-gray-500 text-sm leading-relaxed">{uc.desc}</p>
               </div>
             ))}
           </div>
@@ -42,26 +46,33 @@ export default function LandingPage() {
 
       <Features />
 
-      {/* Demo section */}
+      {/* How it works */}
       <section id="demo" className="py-24 px-4">
         <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">How It Works</h2>
-            <p className="text-gray-400 text-lg">From event definition to success — in minutes</p>
+          <div className="text-center mb-16">
+            <p className="text-violet-400 text-sm font-semibold tracking-widest uppercase mb-3">How It Works</p>
+            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">From Zero to Confident in Minutes</h2>
+            <p className="text-gray-400 text-lg">No setup required — just describe your event and PrepareAI does the rest</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { step: '01', title: 'Define Your Event', desc: 'Tell PrepareAI what you\'re preparing for, your goal, and your target date.', icon: '🎯' },
-              { step: '02', title: 'Get Your Plan', desc: 'AI instantly generates a personalized day-by-day curriculum with adaptive content.', icon: '🧠' },
-              { step: '03', title: 'Prepare & Win', desc: 'Complete daily sessions, track your success probability, and walk in confident.', icon: '🏆' },
-            ].map(item => (
-              <div key={item.step} className="text-center">
-                <div className="text-5xl mb-4">{item.icon}</div>
-                <div className="text-purple-400 text-sm font-bold tracking-wider mb-2">STEP {item.step}</div>
-                <h3 className="text-xl font-semibold text-white mb-3">{item.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
+          <div className="relative">
+            {/* Connector line */}
+            <div className="hidden md:block absolute top-12 left-1/6 right-1/6 h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
+            <div className="grid md:grid-cols-3 gap-8">
+              {[
+                { step: '01', title: 'Define Your Event', desc: "Tell PrepareAI what you're preparing for, your goal, and your target date.", emoji: '🎯', color: 'text-violet-400', bg: 'bg-violet-500/10 border-violet-500/20' },
+                { step: '02', title: 'Get Your Plan', desc: 'AI instantly generates a personalized day-by-day curriculum with adaptive content.', emoji: '🧠', color: 'text-cyan-400', bg: 'bg-cyan-500/10 border-cyan-500/20' },
+                { step: '03', title: 'Prepare & Win', desc: 'Complete daily sessions, track your success probability, and walk in confident.', emoji: '🏆', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+              ].map(item => (
+                <div key={item.step} className="text-center">
+                  <div className={`w-24 h-24 rounded-2xl border ${item.bg} flex items-center justify-center mx-auto mb-5 text-4xl`}>
+                    {item.emoji}
+                  </div>
+                  <div className={`text-xs font-bold tracking-widest uppercase mb-2 ${item.color}`}>Step {item.step}</div>
+                  <h3 className="text-xl font-semibold text-white mb-3">{item.title}</h3>
+                  <p className="text-gray-500 text-sm leading-relaxed">{item.desc}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -71,16 +82,24 @@ export default function LandingPage() {
       {/* CTA section */}
       <section className="py-24 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="glass-card rounded-2xl p-12 glow-purple">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center mx-auto mb-6">
-              <Zap className="w-8 h-8 text-white" />
+          <div className="relative border-gradient-purple rounded-3xl p-12 overflow-hidden">
+            {/* Glow */}
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-600/10 via-transparent to-cyan-500/5 rounded-3xl" />
+            <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-64 h-64 bg-violet-600/15 rounded-full blur-3xl" />
+
+            <div className="relative z-10">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-brand flex items-center justify-center mx-auto mb-6 shadow-brand-lg">
+                <Zap className="w-7 h-7 text-white" />
+              </div>
+              <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Ready to Prepare Smarter?</h2>
+              <p className="text-gray-400 text-lg mb-8 max-w-xl mx-auto">
+                Join thousands of professionals who use PrepareAI to walk into their most important moments with confidence.
+              </p>
+              <Link href="/signin" className="inline-flex items-center gap-2.5 px-8 py-4 rounded-xl bg-gradient-brand text-white font-semibold text-lg shadow-brand-lg hover:opacity-90 hover:-translate-y-0.5 transition-all">
+                Start Preparing Free <ArrowRight className="w-5 h-5" />
+              </Link>
+              <p className="text-gray-600 text-sm mt-5">No credit card required • Free plan forever</p>
             </div>
-            <h2 className="text-4xl font-bold text-white mb-4">Ready to Prepare Smarter?</h2>
-            <p className="text-gray-400 text-lg mb-8">Join thousands of professionals who use PrepareAI to walk into their most important moments with confidence.</p>
-            <Link href="/signin" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 text-white font-semibold text-lg hover:from-purple-700 hover:to-cyan-600 transition-all shadow-lg shadow-purple-500/30">
-              Start Preparing Free <ArrowRight className="w-5 h-5" />
-            </Link>
-            <p className="text-gray-500 text-sm mt-4">No credit card required • Free plan forever</p>
           </div>
         </div>
       </section>

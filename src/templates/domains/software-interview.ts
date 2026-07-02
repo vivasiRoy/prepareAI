@@ -4,7 +4,7 @@ import { EventType } from '@prisma/client'
 export const softwareInterviewTemplate: DomainTemplate = {
   id: 'software-interview',
   name: 'Software Engineering Interview',
-  eventTypes: [EventType.INTERVIEW],
+  eventTypes: [EventType.SOFTWARE_INTERVIEW, EventType.JOB_INTERVIEW],
   typicalDuration: 28,
   coreTopics: [
     'Arrays & Strings', 'Linked Lists', 'Trees & Graphs', 'Dynamic Programming',

@@ -10,14 +10,14 @@ import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 
 const eventTypes = [
-  { id: 'INTERVIEW', label: 'Job Interview', icon: Briefcase, color: 'text-purple-400' },
-  { id: 'EXAM', label: 'Exam', icon: BookOpen, color: 'text-blue-400' },
-  { id: 'CERTIFICATION', label: 'Certification', icon: Award, color: 'text-yellow-400' },
-  { id: 'PRESENTATION', label: 'Presentation', icon: Mic, color: 'text-green-400' },
-  { id: 'MEETING', label: 'Meeting', icon: Users, color: 'text-cyan-400' },
+  { id: 'SOFTWARE_INTERVIEW', label: 'Software Interview', icon: Briefcase, color: 'text-purple-400' },
+  { id: 'JOB_INTERVIEW', label: 'Job Interview', icon: Users, color: 'text-blue-400' },
+  { id: 'ACADEMIC_EXAM', label: 'Academic Exam', icon: BookOpen, color: 'text-yellow-400' },
+  { id: 'CERTIFICATION_EXAM', label: 'Certification', icon: Award, color: 'text-green-400' },
+  { id: 'PRESENTATION', label: 'Presentation', icon: Mic, color: 'text-cyan-400' },
   { id: 'SALES_PITCH', label: 'Sales Pitch', icon: DollarSign, color: 'text-orange-400' },
   { id: 'NEGOTIATION', label: 'Negotiation', icon: Scale, color: 'text-red-400' },
-  { id: 'ACADEMIC_ASSESSMENT', label: 'Academic', icon: GraduationCap, color: 'text-pink-400' },
+  { id: 'COURT_CASE', label: 'Court Case', icon: GraduationCap, color: 'text-pink-400' },
   { id: 'OTHER', label: 'Other', icon: MoreHorizontal, color: 'text-gray-400' },
 ]
 

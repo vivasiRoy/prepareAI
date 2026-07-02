@@ -21,13 +21,17 @@ export default function LearnPage() {
 
   useEffect(() => {
     fetch(`/api/events/${eventId}/curriculum`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`${r.status}`)
+        return r.json()
+      })
       .then(data => {
         const lessons = data.data?.lessons || []
         const nextLesson = lessons.find((l: any) => !l.completed)
         setLesson(nextLesson || null)
         setLoading(false)
       })
+      .catch(() => setLoading(false))
   }, [eventId])
 
   const handleComplete = async () => {

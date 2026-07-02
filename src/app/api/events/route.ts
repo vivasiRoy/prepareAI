@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 const createEventSchema = z.object({
   title: z.string().min(1).max(200),
-  type: z.enum(['INTERVIEW','EXAM','CERTIFICATION','PRESENTATION','MEETING','SALES_PITCH','NEGOTIATION','COURT_CASE','ACADEMIC_ASSESSMENT','OTHER']),
+  type: z.enum(['SOFTWARE_INTERVIEW','JOB_INTERVIEW','ACADEMIC_EXAM','CERTIFICATION_EXAM','PRESENTATION','SALES_PITCH','NEGOTIATION','COURT_CASE','OTHER']),
   description: z.string().min(10).max(2000),
   goalOutcome: z.string().min(10).max(1000),
   targetDate: z.string().datetime(),
