@@ -43,7 +43,7 @@ export function FlashCardDeck({ cards, onComplete }: FlashCardDeckProps) {
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
-  }, [flipped, index])
+  }, [flipped, index, handleFlip, handleResult])
 
   if (done) {
     const gotCount = Object.values(results).filter(r => r === 'got').length
