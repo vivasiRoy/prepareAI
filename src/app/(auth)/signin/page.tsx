@@ -156,7 +156,7 @@ export default function SignInPage() {
         </form>
 
         <p className="text-center text-xs text-gray-600 mt-6">
-          No account? Just sign in — we'll create one for you.
+          No account? Just sign in — we&apos;ll create one for you.
         </p>
       </div>
     </motion.div>

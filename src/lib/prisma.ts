@@ -5,7 +5,7 @@ import { Pool, neonConfig } from '@neondatabase/serverless'
 // Node.js 22 has built-in WebSocket — no ws package needed.
 // Fall back to ws only if running in an older Node environment.
 if (typeof WebSocket === 'undefined') {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   neonConfig.webSocketConstructor = require('ws')
 }
 

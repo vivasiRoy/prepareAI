@@ -12,7 +12,7 @@ export default function NewEventPage() {
           <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </Link>
         <h1 className="text-3xl font-bold text-white">Create New Event</h1>
-        <p className="text-gray-400 mt-1">Tell us about what you're preparing for</p>
+        <p className="text-gray-400 mt-1">Tell us about what you&apos;re preparing for</p>
       </div>
       <EventWizard />
     </div>
