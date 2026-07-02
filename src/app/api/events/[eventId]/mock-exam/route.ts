@@ -148,7 +148,7 @@ Return ONLY valid JSON, no markdown:
       questions: Array<{
         id: string; type: string; topic: string; difficulty: number
         question: string; options?: string[]; correctAnswer?: string
-        sampleAnswer?: string; evaluationCriteria?: string[]
+        sampleAnswer?: string; evaluationCriteria?: string[]; explanation?: string
       }>
       answers: string[]
     }
