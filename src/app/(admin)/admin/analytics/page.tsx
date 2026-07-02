@@ -28,7 +28,7 @@ export default async function AnalyticsPage() {
     }),
     prisma.lesson.aggregate({
       _count: { completed: true },
-      where: { completed: true, updatedAt: { gte: thirtyDaysAgo } },
+      where: { completed: true },
     }),
     prisma.attempt.groupBy({
       by: ['createdAt'],
