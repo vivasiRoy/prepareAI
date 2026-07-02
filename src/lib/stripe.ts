@@ -2,14 +2,21 @@ import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import type { User, Plan } from '@prisma/client'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
-})
+let _stripe: Stripe | null = null
+
+function getStripe(): Stripe {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET_KEY
+    if (!key) throw new Error('STRIPE_SECRET_KEY is not set')
+    _stripe = new Stripe(key, { apiVersion: '2025-02-24.acacia' })
+  }
+  return _stripe
+}
 
 export async function getOrCreateCustomer(user: User): Promise<string> {
   if (user.stripeCustomerId) return user.stripeCustomerId
 
-  const customer = await stripe.customers.create({
+  const customer = await getStripe().customers.create({
     email: user.email!,
     name: user.name || undefined,
     metadata: { userId: user.id },
@@ -32,7 +39,7 @@ export async function createCheckoutSession(
   const customerId = await getOrCreateCustomer(user)
   const priceId = plan === 'PRO' ? process.env.STRIPE_PRO_PRICE_ID! : process.env.STRIPE_ENTERPRISE_PRICE_ID!
 
-  return stripe.checkout.sessions.create({
+  return getStripe().checkout.sessions.create({
     customer: customerId,
     payment_method_types: ['card'],
     line_items: [{ price: priceId, quantity: 1 }],
@@ -45,7 +52,7 @@ export async function createCheckoutSession(
 }
 
 export async function createPortalSession(customerId: string, returnUrl: string): Promise<Stripe.BillingPortal.Session> {
-  return stripe.billingPortal.sessions.create({ customer: customerId, return_url: returnUrl })
+  return getStripe().billingPortal.sessions.create({ customer: customerId, return_url: returnUrl })
 }
 
 export function getPlanFromPriceId(priceId: string): Plan {
