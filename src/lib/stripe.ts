@@ -13,6 +13,8 @@ function getStripe(): Stripe {
   return _stripe
 }
 
+export { getStripe }
+
 export async function getOrCreateCustomer(user: User): Promise<string> {
   if (user.stripeCustomerId) return user.stripeCustomerId
 
