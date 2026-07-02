@@ -22,7 +22,7 @@ export function FlashCardDeck({ cards, onComplete }: FlashCardDeckProps) {
 
   const handleFlip = useCallback(() => setFlipped(f => !f), [])
 
-  const handleResult = (result: 'got' | 'review') => {
+  const handleResult = useCallback((result: 'got' | 'review') => {
     const newResults = { ...results, [index]: result }
     setResults(newResults)
     if (index < cards.length - 1) {
@@ -33,7 +33,7 @@ export function FlashCardDeck({ cards, onComplete }: FlashCardDeckProps) {
       setDone(true)
       onComplete({ got, review: cards.length - got })
     }
-  }
+  }, [results, index, cards.length, onComplete])
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {

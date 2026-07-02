@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { Pool, neonConfig } from '@neondatabase/serverless'
+// @ts-ignore
 import ws from 'ws'
 import bcrypt from 'bcryptjs'
 
