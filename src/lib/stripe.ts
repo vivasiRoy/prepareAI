@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import type { User, Plan } from '@prisma/client'
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-09-30.acacia',
+  apiVersion: '2025-02-24.acacia',
 })
 
 export async function getOrCreateCustomer(user: User): Promise<string> {

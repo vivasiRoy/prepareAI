@@ -48,7 +48,7 @@ export function CurriculumEditor({ curriculum, eventId, onRegenerate }: Curricul
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white">{curriculum.title}</h3>
+          <h3 className="text-lg font-semibold text-white">{(curriculum as any).title ?? 'Curriculum'}</h3>
           <p className="text-sm text-gray-400 mt-0.5">{curriculum.totalDays} days • {curriculum.lessons.length} lessons</p>
         </div>
         <Button variant="outline" size="sm" className="border-white/20" onClick={handleRegenerate} disabled={regenerating}>
