@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PlayCircle, FileText, BarChart3, Edit, Calendar, Target, BookOpen, Zap } from 'lucide-react'
+import { GenerateCurriculum } from '@/components/events/GenerateCurriculum'
 import type { EventWithRelations } from '@/types'
 
 export default async function EventDetailPage({ params }: { params: { eventId: string } }) {
@@ -138,9 +139,7 @@ export default async function EventDetailPage({ params }: { params: { eventId: s
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-400">
-              <p>Generating your curriculum...</p>
-            </div>
+            <GenerateCurriculum eventId={event.id} />
           )}
         </TabsContent>
 

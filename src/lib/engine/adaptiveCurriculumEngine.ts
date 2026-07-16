@@ -4,7 +4,7 @@ import { generateLessonContent } from './contentGenerator'
 import { getDomainTemplate } from '@/templates/domains'
 import { prisma } from '@/lib/prisma'
 import type { EventWithRelations, GeneratedLesson } from '@/types'
-import type { LessonType, Plan } from '@prisma/client'
+import type { LessonType, Plan } from '@/generated/prisma'
 
 function calculateDaysUntil(targetDate: Date): number {
   const now = new Date()
@@ -25,21 +25,36 @@ export async function generateCurriculum(params: {
   userId: string
   plan: Plan
 }): Promise<{ lessons: GeneratedLesson[]; outline: object; skillTree: object; domainContext: object }> {
-  const { event, userId } = params
+  const { event, userId, plan } = params
 
   const totalDays = calculateDaysUntil(event.targetDate)
   const template = getDomainTemplate(event.type, event.description)
   const domain = await classifyEvent(event.description, event.type, event.goalOutcome)
 
-  const outlinePrompt = "Create a " + totalDays + "-day preparation curriculum for:\nEvent: " + event.title + " (" + event.type + ")\nGoal: " + event.goalOutcome + "\nKey skills needed: " + domain.keySkills.join(', ') + "\nCore topics: " + domain.coreTopics.join(', ') + "\n\nReturn JSON with: {dailyTopics: [{day: number, topic: string, focus: string, lessonType: string, duration: number, difficulty: number}], skillTree: {nodes: [{id, name, prerequisites: []}]}, weeklyMilestones: [{week, milestone}]}"
+  const outlinePrompt = `Create a ${totalDays}-day preparation curriculum for this SPECIFIC event.
+
+Event title: ${event.title}
+Event type: ${event.type.replace(/_/g, ' ')}
+Description: ${event.description}
+Goal: ${event.goalOutcome}
+Key skills needed: ${domain.keySkills.join(', ')}
+Core topics: ${domain.coreTopics.join(', ')}
+
+Design ${totalDays} daily topics that are SPECIFIC to this exact subject matter — reference the actual concepts, not generic study advice. For a linear algebra exam, that means topics like "Vector spaces and subspaces", "Eigenvalues and eigenvectors", "Matrix diagonalization" — NOT "Core Subject Matter Review".
+
+Progress difficulty from foundational (day 1) to exam-level (final day). Vary lessonType across: MICRO_LESSON, FLASHCARD, QUIZ, SIMULATION, MOCK_EXAM.
+
+Return ONLY valid JSON (no markdown, no commentary), exactly this shape:
+{"dailyTopics":[{"day":1,"topic":"specific topic name","focus":"what to master this day","lessonType":"MICRO_LESSON","duration":25,"difficulty":2}],"skillTree":{"nodes":[{"id":"n1","name":"skill","prerequisites":[]}]},"weeklyMilestones":[{"week":1,"milestone":"specific milestone"}]}`
 
   const outlineResponse = await generateLLMResponse({
     feature: 'curriculum_generation',
     userId,
-    systemPrompt: 'You are an expert learning designer creating adaptive curricula.',
+    userPlan: plan,
+    systemPrompt: 'You are an expert learning designer. You create highly specific, subject-accurate curricula. You respond with ONLY valid JSON — never markdown fences, never prose.',
     messages: [{ role: 'user', content: outlinePrompt }],
     maxTokens: 6000,
-    temperature: 0.7,
+    temperature: 0.6,
   })
 
   let outline: {
@@ -53,7 +68,8 @@ export async function generateCurriculum(params: {
   }
 
   try {
-    const match = outlineResponse.content.match(/\{[\s\S]*\}/)
+    const cleaned = outlineResponse.content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
+    const match = cleaned.match(/\{[\s\S]*\}/)
     if (match) outline = JSON.parse(match[0])
   } catch {}
 
@@ -71,44 +87,19 @@ export async function generateCurriculum(params: {
     })
   }
 
-  // Generate detailed content for first 5 days immediately; rest is lazy-loaded
-  const lessons: GeneratedLesson[] = []
-  const daysToGenerate = Math.min(5, outline.dailyTopics.length)
-
-  for (let i = 0; i < daysToGenerate; i++) {
-    const dayInfo = outline.dailyTopics[i]
-    const content = await generateLessonContent(
-      dayInfo.topic,
-      (dayInfo.lessonType as LessonType) || 'MICRO_LESSON',
-      dayInfo.duration || 20,
-      dayInfo.difficulty || 3,
-      event.description
-    )
-
-    lessons.push({
-      dayNumber: dayInfo.day,
-      title: dayInfo.topic,
-      type: (dayInfo.lessonType as LessonType) || 'MICRO_LESSON',
-      content,
-      duration: dayInfo.duration || 20,
-      difficulty: dayInfo.difficulty || 3,
-      order: i,
-    })
-  }
-
-  // Stub remaining days
-  for (let i = daysToGenerate; i < outline.dailyTopics.length; i++) {
-    const dayInfo = outline.dailyTopics[i]
-    lessons.push({
-      dayNumber: dayInfo.day,
-      title: dayInfo.topic,
-      type: (dayInfo.lessonType as LessonType) || 'MICRO_LESSON',
-      content: { summary: '', keyPoints: [], examples: [] },
-      duration: dayInfo.duration || 20,
-      difficulty: dayInfo.difficulty || 3,
-      order: i,
-    })
-  }
+  // Only the outline is generated up front (a single LLM call), so curriculum
+  // creation stays well under Firebase Hosting's 60s request limit. Each
+  // lesson's detailed content is generated on demand (synchronously) the first
+  // time the user opens it — see the lesson GET route.
+  const lessons: GeneratedLesson[] = outline.dailyTopics.map((dayInfo, idx) => ({
+    dayNumber: dayInfo.day,
+    title: dayInfo.topic,
+    type: (dayInfo.lessonType as LessonType) || 'MICRO_LESSON',
+    content: { summary: '', keyPoints: [], examples: [] },
+    duration: dayInfo.duration || 20,
+    difficulty: dayInfo.difficulty || 3,
+    order: idx,
+  }))
 
   return {
     lessons,
@@ -124,7 +115,7 @@ export async function generateCurriculum(params: {
   }
 }
 
-export async function generateDailyContent(lessonId: string): Promise<void> {
+export async function generateDailyContent(lessonId: string, plan?: string): Promise<void> {
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
     include: { curriculum: { include: { event: true } } },
@@ -137,7 +128,8 @@ export async function generateDailyContent(lessonId: string): Promise<void> {
     lesson.type,
     lesson.duration,
     lesson.difficulty,
-    lesson.curriculum.event.description
+    lesson.curriculum.event.description,
+    { userId: lesson.curriculum.event.userId, userPlan: plan }
   )
 
   await prisma.lesson.update({

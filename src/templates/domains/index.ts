@@ -1,5 +1,5 @@
 import type { DomainTemplate } from '@/types'
-import { EventType } from '@prisma/client'
+import { EventType } from '@/generated/prisma'
 import { softwareInterviewTemplate } from './software-interview'
 import { examTemplate } from './exam'
 import { presentationTemplate } from './presentation'

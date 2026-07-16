@@ -20,9 +20,24 @@ export async function GET(req: Request, { params }: { params: { lessonId: string
     return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
   }
 
+  // Generate the lesson content on first open (synchronously so it's ready when
+  // we respond). This keeps curriculum creation fast while still delivering full
+  // AI content per lesson. A single lesson is one LLM call — well under 60s.
   const content = lesson.content as any
   if (!content?.summary && !content?.keyPoints?.length) {
-    generateDailyContent(params.lessonId).catch(console.error)
+    try {
+      await generateDailyContent(params.lessonId, session.user.plan)
+      const refreshed = await prisma.lesson.findUnique({
+        where: { id: params.lessonId },
+        include: {
+          quizzes: true,
+          attempts: { where: { userId: session.user.id }, orderBy: { createdAt: 'desc' }, take: 5 },
+        },
+      })
+      if (refreshed) return NextResponse.json({ data: refreshed, success: true })
+    } catch (e) {
+      console.error('[lesson content generation]', e)
+    }
   }
 
   return NextResponse.json({ data: lesson, success: true })

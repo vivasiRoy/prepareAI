@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { generateCurriculum } from '@/lib/engine/adaptiveCurriculumEngine'
 import { PLAN_FEATURES } from '@/types'
 import { z } from 'zod'
 
@@ -69,32 +68,9 @@ export async function POST(req: Request) {
     },
   })
 
-  generateCurriculum({ event: event as any, userId: session.user.id, plan: session.user.plan })
-    .then(async (result) => {
-      const curriculum = await prisma.curriculum.create({
-        data: {
-          eventId: event.id,
-          totalDays: result.lessons.length,
-          generated: true,
-          outline: result.outline as any,
-          skillTree: result.skillTree as any,
-          domainContext: result.domainContext as any,
-        },
-      })
-      await prisma.lesson.createMany({
-        data: result.lessons.map((l) => ({
-          curriculumId: curriculum.id,
-          dayNumber: l.dayNumber,
-          title: l.title,
-          type: l.type,
-          content: l.content as any,
-          duration: l.duration,
-          difficulty: l.difficulty,
-          order: l.order,
-        })),
-      })
-    })
-    .catch(console.error)
-
+  // NOTE: Curriculum generation is triggered separately by the client via
+  // POST /api/events/[eventId]/curriculum and awaited there. A fire-and-forget
+  // promise here would never complete in a serverless environment (the function
+  // instance is frozen once the response is returned).
   return NextResponse.json({ data: event, success: true }, { status: 201 })
 }

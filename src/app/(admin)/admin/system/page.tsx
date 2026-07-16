@@ -55,7 +55,7 @@ export default async function SystemPage() {
               ['Node Version', process.version],
               ['Environment', process.env.NODE_ENV || 'development'],
               ['Default LLM', process.env.DEFAULT_LLM_PROVIDER || 'anthropic'],
-              ['Default Model', process.env.DEFAULT_MODEL || 'claude-sonnet-4-5-20251001'],
+              ['Default Model', process.env.DEFAULT_MODEL || 'claude-sonnet-4-6'],
             ].map(([k, v]) => (
               <div key={k} className="flex items-center justify-between py-1.5 border-b border-white/5">
                 <span className="text-sm text-gray-400">{k}</span>

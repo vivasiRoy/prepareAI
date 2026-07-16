@@ -1,4 +1,4 @@
-import type { User, Event, EventType, EventStatus, Plan, Role, LessonType, QuizType, Attempt, EventMaterial, EventGoal, Curriculum, Lesson, Quiz, PerformanceMetrics, Subscription } from '@prisma/client'
+import type { User, Event, EventType, EventStatus, Plan, Role, LessonType, QuizType, Attempt, EventMaterial, EventGoal, Curriculum, Lesson, Quiz, PerformanceMetrics, Subscription } from '@/generated/prisma'
 
 export type { User, Event, EventType, EventStatus, Plan, Role, LessonType, QuizType, Attempt, EventMaterial, EventGoal, Curriculum, Lesson, Quiz, PerformanceMetrics, Subscription }
 
@@ -35,6 +35,7 @@ export interface LLMRequestOptions {
   systemPrompt?: string
   tools?: unknown[]
   userId?: string
+  userPlan?: string
   feature?: string
 }
 

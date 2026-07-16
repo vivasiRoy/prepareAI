@@ -17,21 +17,39 @@ export default function LearnPage() {
   const eventId = params.eventId as string
   const [lesson, setLesson] = useState<LessonWithQuizzes | null>(null)
   const [loading, setLoading] = useState(true)
+  const [generating, setGenerating] = useState(false)
   const [completed, setCompleted] = useState(false)
 
   useEffect(() => {
-    fetch(`/api/events/${eventId}/curriculum`)
-      .then(r => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch(`/api/events/${eventId}/curriculum`)
         if (!r.ok) throw new Error(`${r.status}`)
-        return r.json()
-      })
-      .then(data => {
+        const data = await r.json()
         const lessons = data.data?.lessons || []
         const nextLesson = lessons.find((l: any) => !l.completed)
-        setLesson(nextLesson || null)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+        if (!nextLesson) { if (!cancelled) { setLesson(null); setLoading(false) } return }
+
+        // If the lesson content hasn't been generated yet, fetch the lesson
+        // detail — the API generates it on demand (a single AI call).
+        const c = nextLesson.content
+        const needsContent = !c?.summary && !(c?.keyPoints?.length) && nextLesson.type !== 'FLASHCARD' && nextLesson.type !== 'QUIZ'
+        if (needsContent) {
+          if (!cancelled) { setLoading(false); setGenerating(true) }
+          const lr = await fetch(`/api/lessons/${nextLesson.id}`)
+          const ld = await lr.json()
+          if (!cancelled) setLesson(ld.data || nextLesson)
+        } else {
+          if (!cancelled) setLesson(nextLesson)
+        }
+      } catch {
+        // fall through to loading=false below
+      } finally {
+        if (!cancelled) { setLoading(false); setGenerating(false) }
+      }
+    })()
+    return () => { cancelled = true }
   }, [eventId])
 
   const handleComplete = async () => {
@@ -57,6 +75,14 @@ export default function LearnPage() {
   if (loading) return (
     <div className="flex items-center justify-center min-h-[400px]">
       <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+    </div>
+  )
+
+  if (generating) return (
+    <div className="flex flex-col items-center justify-center min-h-[400px] text-center px-6">
+      <Loader2 className="w-10 h-10 animate-spin text-violet-400 mb-4" />
+      <h2 className="text-xl font-semibold text-white mb-1">Preparing your lesson…</h2>
+      <p className="text-gray-400 text-sm max-w-sm">The AI is writing this lesson&apos;s content just for you. This takes a few seconds.</p>
     </div>
   )
 

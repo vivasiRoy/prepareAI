@@ -7,7 +7,10 @@
       "**/node_modules/**"
     ],
     "frameworksBackend": {
-      "region": "us-central1"
+      "region": "us-central1",
+      "memory": "1GiB",
+      "timeoutSeconds": 300,
+      "maxInstances": 10
     }
   }
 }

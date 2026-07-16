@@ -1,21 +1,20 @@
-import { PrismaClient } from '@prisma/client'
-import { PrismaNeon } from '@prisma/adapter-neon'
-import { Pool, neonConfig } from '@neondatabase/serverless'
+import { PrismaClient } from '@/generated/prisma'
+import { withAccelerate } from '@prisma/extension-accelerate'
 
-// Node.js 22 has built-in WebSocket — no ws package needed.
-// Fall back to ws only if running in an older Node environment.
-if (typeof WebSocket === 'undefined') {
-  neonConfig.webSocketConstructor = require('ws')
+// Prisma Accelerate: the client talks to the Accelerate proxy over HTTP using
+// the `prisma://` DATABASE_URL, so no query engine binary is needed at runtime.
+// This is what makes Prisma work reliably on Firebase Cloud Functions / Cloud
+// Run, where bundling or generating the native engine is unreliable.
+//
+// The runtime client is extended with withAccelerate(), but we type the export
+// as PrismaClient so standard query result types flow through the app (we don't
+// use Accelerate's cacheStrategy API).
+const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
+
+function createPrismaClient(): PrismaClient {
+  return new PrismaClient().$extends(withAccelerate()) as unknown as PrismaClient
 }
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient }
-
-function createPrismaClient() {
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL! })
-  const adapter = new PrismaNeon(pool)
-  return new PrismaClient({ adapter } as any)
-}
-
-export const prisma = globalForPrisma.prisma || createPrismaClient()
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma

@@ -1,6 +1,6 @@
 import { generateLLMResponse } from '@/lib/llm/providers'
 import { getDomainTemplate } from '@/templates/domains'
-import type { EventType } from '@prisma/client'
+import type { EventType } from '@/generated/prisma'
 
 export interface DomainClassification {
   primaryDomain: string

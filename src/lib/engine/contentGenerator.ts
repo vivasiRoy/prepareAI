@@ -1,5 +1,5 @@
 import { generateLLMResponse } from '@/lib/llm/providers'
-import type { EventType, LessonType, QuizType } from '@prisma/client'
+import type { EventType, LessonType, QuizType } from '@/generated/prisma'
 import type { FlashCard, GeneratedQuiz, GeneratedLessonContent } from '@/types'
 
 export async function generateFlashCards(
@@ -64,11 +64,14 @@ export async function generateLessonContent(
   type: LessonType,
   duration: number,
   difficulty: number,
-  context?: string
+  context?: string,
+  opts?: { userId?: string; userPlan?: string }
 ): Promise<GeneratedLessonContent> {
   const response = await generateLLMResponse({
     feature: 'lesson_generation',
-    systemPrompt: 'You are an expert instructional designer. Create engaging, practical lesson content.',
+    userId: opts?.userId,
+    userPlan: opts?.userPlan,
+    systemPrompt: 'You are an expert instructional designer. Create engaging, practical, subject-specific lesson content. Respond with ONLY valid JSON.',
     messages: [{
       role: 'user',
       content: "Create a " + duration + "-minute " + type.replace('_', ' ').toLowerCase() + " lesson about: “" + topic + "”\nDifficulty: " + difficulty + "/5\n" + (context || '') + "\n\nReturn JSON: {summary, keyPoints: string[], examples: string[], flashcards?: [{front, back, hint?}], quiz?: [{question, type, options?, correctAnswer, explanation, difficulty}], simulationContext?, evaluationCriteria?: string[]}",
