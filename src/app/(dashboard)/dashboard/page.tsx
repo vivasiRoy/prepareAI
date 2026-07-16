@@ -4,6 +4,7 @@ import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { EventCard } from '@/components/dashboard/EventCard'
 import { StatsOverview } from '@/components/dashboard/StatsOverview'
+import { InviteCard } from '@/components/shared/InviteCard'
 import { Button } from '@/components/ui/button'
 import { Plus, Sparkles } from 'lucide-react'
 import type { EventWithRelations } from '@/types'
@@ -110,6 +111,9 @@ export default async function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Invite friends */}
+      <InviteCard userId={session.user.id} />
     </div>
   )
 }

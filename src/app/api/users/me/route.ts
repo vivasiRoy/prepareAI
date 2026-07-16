@@ -13,25 +13,27 @@ export async function GET() {
   startOfMonth.setDate(1)
   startOfMonth.setHours(0, 0, 0, 0)
 
-  const [user, aiCallsToday, aiCallsMonth] = await Promise.all([
+  const [user, aiCallsToday, aiCallsMonth, referrals] = await Promise.all([
     prisma.user.findUnique({
       where: { id: session.user.id },
       select: {
-        id: true, name: true, email: true, image: true, role: true, plan: true, createdAt: true,
+        id: true, name: true, email: true, image: true, role: true, plan: true, language: true, createdAt: true,
         subscription: true,
         _count: { select: { events: { where: { status: 'ACTIVE' } } } },
       },
     }),
     prisma.lLMUsageLog.count({ where: { userId: session.user.id, createdAt: { gte: startOfDay } } }),
     prisma.lLMUsageLog.count({ where: { userId: session.user.id, createdAt: { gte: startOfMonth } } }),
+    prisma.user.count({ where: { referredBy: session.user.id } }),
   ])
 
-  return NextResponse.json({ data: { ...user, usage: { aiCallsToday, aiCallsMonth } }, success: true })
+  return NextResponse.json({ data: { ...user, usage: { aiCallsToday, aiCallsMonth }, referrals }, success: true })
 }
 
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   image: z.string().url().optional(),
+  language: z.enum(['en', 'es', 'fr', 'de', 'pt', 'hi', 'ar', 'zh']).optional(),
 })
 
 export async function PATCH(req: Request) {

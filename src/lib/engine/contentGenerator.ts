@@ -67,6 +67,17 @@ export async function generateLessonContent(
   context?: string,
   opts?: { userId?: string; userPlan?: string }
 ): Promise<GeneratedLessonContent> {
+  // Type-specific requirements — a FLASHCARD lesson without flashcards or a
+  // QUIZ lesson without questions renders as an empty page.
+  const typeRequirement =
+    type === 'FLASHCARD'
+      ? '\nREQUIRED: include a "flashcards" array with 8-12 cards ({front, back, hint?}).'
+      : type === 'QUIZ'
+      ? '\nREQUIRED: include a "quiz" array with 5-8 questions ({question, type: "MCQ"|"TRUE_FALSE"|"FREE_RESPONSE", options? (4 strings, MCQ only), correctAnswer, explanation, difficulty: 1-5}).'
+      : type === 'SIMULATION' || type === 'MOCK_INTERVIEW' || type === 'MOCK_EXAM'
+      ? '\nREQUIRED: include "simulationContext" (the scenario setup) and "evaluationCriteria" (string[]).'
+      : ''
+
   const response = await generateLLMResponse({
     feature: 'lesson_generation',
     userId: opts?.userId,
@@ -74,7 +85,7 @@ export async function generateLessonContent(
     systemPrompt: 'You are an expert instructional designer. Create engaging, practical, subject-specific lesson content. Respond with ONLY valid JSON.',
     messages: [{
       role: 'user',
-      content: "Create a " + duration + "-minute " + type.replace('_', ' ').toLowerCase() + " lesson about: “" + topic + "”\nDifficulty: " + difficulty + "/5\n" + (context || '') + "\n\nReturn JSON: {summary, keyPoints: string[], examples: string[], flashcards?: [{front, back, hint?}], quiz?: [{question, type, options?, correctAnswer, explanation, difficulty}], simulationContext?, evaluationCriteria?: string[]}",
+      content: "Create a " + duration + "-minute " + type.replace('_', ' ').toLowerCase() + " lesson about: “" + topic + "”\nDifficulty: " + difficulty + "/5\n" + (context || '') + typeRequirement + "\n\nReturn JSON: {summary, keyPoints: string[], examples: string[], flashcards?: [{front, back, hint?}], quiz?: [{question, type, options?, correctAnswer, explanation, difficulty}], simulationContext?, evaluationCriteria?: string[]}",
     }],
     maxTokens: 5000,
     temperature: 0.8,
@@ -123,12 +134,15 @@ export async function generateSimulation(
 
 export async function processDocument(
   content: string,
-  materialName: string
+  materialName: string,
+  opts?: { userId?: string; userPlan?: string }
 ): Promise<{ summary: string; keyPoints: string[]; topics: string[]; questions: string[] }> {
   const truncated = content.slice(0, 8000)
 
   const response = await generateLLMResponse({
     feature: 'document_processing',
+    userId: opts?.userId,
+    userPlan: opts?.userPlan,
     systemPrompt: 'Extract key learning information from documents.',
     messages: [{
       role: 'user',

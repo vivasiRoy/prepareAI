@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateLLMResponse } from '@/lib/llm/providers'
+import { languageDirective } from '@/lib/i18n'
 import { PLAN_FEATURES } from '@/types'
 
 // POST /api/events/[eventId]/mock-exam
@@ -125,7 +126,7 @@ Return ONLY valid JSON, no markdown:
       "evaluationCriteria": ["criterion 1", "criterion 2"]
     }
   ]
-}`
+}${languageDirective(session.user.language)}`
 
     const response = await generateLLMResponse({
       provider: 'anthropic',
@@ -202,7 +203,7 @@ Return ONLY valid JSON:
   "weakTopics": ["topic2"],
   "recommendation": "2-3 sentence recommendation on what to focus on given ${daysUntil} days remaining",
   "readinessLevel": "READY|ALMOST_READY|NEEDS_WORK|CRITICAL"
-}`
+}${languageDirective(session.user.language)}`
 
     const evalResponse = await generateLLMResponse({
       provider: 'anthropic',

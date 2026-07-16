@@ -37,7 +37,7 @@ export async function POST(req: Request, { params }: { params: { eventId: string
   })
   if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 })
 
-  const result = await generateCurriculum({ event: event as any, userId: session.user.id, plan: session.user.plan })
+  const result = await generateCurriculum({ event: event as any, userId: session.user.id, plan: session.user.plan, language: session.user.language })
 
   if (event.curriculum) {
     await prisma.lesson.deleteMany({ where: { curriculumId: event.curriculum.id } })

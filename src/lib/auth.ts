@@ -66,11 +66,12 @@ export const authOptions: NextAuthOptions = {
       if (user || trigger === 'update' || Date.now() - refreshedAt > 30_000) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true, plan: true },
+          select: { role: true, plan: true, language: true },
         })
         if (dbUser) {
           token.role = dbUser.role
           token.plan = dbUser.plan
+          token.language = dbUser.language
         }
         token.planRefreshedAt = Date.now()
       }
@@ -81,6 +82,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.role = token.role as Role
         session.user.plan = token.plan as Plan
+        session.user.language = (token.language as string) || 'en'
       }
       return session
     },
@@ -117,6 +119,7 @@ declare module 'next-auth' {
       image?: string | null
       role: Role
       plan: Plan
+      language: string
     }
   }
 }
@@ -126,6 +129,7 @@ declare module 'next-auth/jwt' {
     id: string
     role: Role
     plan: Plan
+    language?: string
     planRefreshedAt?: number
   }
 }

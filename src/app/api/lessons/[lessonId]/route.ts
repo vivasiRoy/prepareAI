@@ -23,10 +23,16 @@ export async function GET(req: Request, { params }: { params: { lessonId: string
   // Generate the lesson content on first open (synchronously so it's ready when
   // we respond). This keeps curriculum creation fast while still delivering full
   // AI content per lesson. A single lesson is one LLM call — well under 60s.
+  // The "already generated" check is type-aware: flashcard lessons need cards,
+  // quiz lessons need Quiz rows, others need summary/keyPoints.
   const content = lesson.content as any
-  if (!content?.summary && !content?.keyPoints?.length) {
+  const missingContent =
+    lesson.type === 'FLASHCARD' ? !content?.flashcards?.length
+    : lesson.type === 'QUIZ' ? lesson.quizzes.length === 0
+    : !content?.summary && !content?.keyPoints?.length
+  if (missingContent) {
     try {
-      await generateDailyContent(params.lessonId, session.user.plan)
+      await generateDailyContent(params.lessonId, session.user.plan, session.user.language)
       const refreshed = await prisma.lesson.findUnique({
         where: { id: params.lessonId },
         include: {

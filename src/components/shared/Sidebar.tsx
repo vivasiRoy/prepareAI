@@ -7,18 +7,20 @@ import { LayoutDashboard, Calendar, CreditCard, Settings, Zap, Menu, X, LogOut, 
 import { useSession, signOut } from 'next-auth/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { LanguageSwitcher, useLanguage } from '@/components/shared/LanguageProvider'
 import { cn } from '@/lib/utils'
-
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/events', label: 'My Events', icon: Calendar },
-  { href: '/billing', label: 'Billing', icon: CreditCard },
-  { href: '/settings', label: 'Settings', icon: Settings },
-]
 
 function SidebarContent() {
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { t } = useLanguage()
+
+  const navItems = [
+    { href: '/dashboard', label: t('dashboard'), icon: LayoutDashboard },
+    { href: '/events', label: t('myEvents'), icon: Calendar },
+    { href: '/billing', label: t('billing'), icon: CreditCard },
+    { href: '/settings', label: t('settings'), icon: Settings },
+  ]
 
   return (
     <div className="flex flex-col h-full">
@@ -55,6 +57,11 @@ function SidebarContent() {
           )
         })}
       </nav>
+
+      {/* Language */}
+      <div className="px-4 pb-2 flex justify-start">
+        <LanguageSwitcher />
+      </div>
 
       {/* User */}
       <div className="p-4 mx-2 mb-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">

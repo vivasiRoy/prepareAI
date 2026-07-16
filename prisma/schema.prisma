@@ -77,6 +77,8 @@ model User {
   plan                 Plan      @default(FREE)
   stripeCustomerId     String?
   stripeSubscriptionId String?
+  referredBy           String?
+  language             String    @default("en")
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 

@@ -20,11 +20,22 @@ export default function SignUpPage() {
   const [oauthProviders, setOauthProviders] = useState<{ google: boolean; github: boolean }>({ google: false, github: false })
   const router = useRouter()
 
+  const [ref, setRef] = useState<string>('')
+
   // Only offer OAuth buttons for providers that are actually configured
   useEffect(() => {
     getProviders().then(p => {
       setOauthProviders({ google: !!p?.google, github: !!p?.github })
     }).catch(() => {})
+    // Referral attribution — survives navigating away and coming back
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const r = params.get('ref') || localStorage.getItem('prepareai.ref') || ''
+      if (r) {
+        setRef(r)
+        localStorage.setItem('prepareai.ref', r)
+      }
+    } catch {}
   }, [])
 
   const handleOAuth = async (provider: 'google' | 'github') => {
@@ -39,7 +50,7 @@ export default function SignUpPage() {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+      body: JSON.stringify({ name, email, password, ref: ref || undefined }),
     })
     if (!res.ok) {
       const data = await res.json()
@@ -47,6 +58,7 @@ export default function SignUpPage() {
       setLoading(null)
       return
     }
+    try { localStorage.removeItem('prepareai.ref') } catch {}
     await signIn('credentials', { email, password, callbackUrl: '/dashboard' })
   }
 

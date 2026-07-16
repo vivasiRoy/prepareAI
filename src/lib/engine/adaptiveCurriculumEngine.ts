@@ -3,6 +3,7 @@ import { classifyEvent } from './domainClassifier'
 import { generateLessonContent } from './contentGenerator'
 import { getDomainTemplate } from '@/templates/domains'
 import { prisma } from '@/lib/prisma'
+import { languageDirective } from '@/lib/i18n'
 import type { EventWithRelations, GeneratedLesson } from '@/types'
 import type { LessonType, Plan } from '@/generated/prisma'
 
@@ -24,12 +25,27 @@ export async function generateCurriculum(params: {
   event: EventWithRelations
   userId: string
   plan: Plan
+  language?: string
 }): Promise<{ lessons: GeneratedLesson[]; outline: object; skillTree: object; domainContext: object }> {
-  const { event, userId, plan } = params
+  const { event, userId, plan, language } = params
 
   const totalDays = calculateDaysUntil(event.targetDate)
   const template = getDomainTemplate(event.type, event.description)
   const domain = await classifyEvent(event.description, event.type, event.goalOutcome)
+
+  // User-provided materials (uploads, URLs, videos) steer the curriculum —
+  // the whole point of adding them is that the plan reflects their content.
+  const materialsContext = (event.materials || [])
+    .slice(0, 8)
+    .map(m => {
+      let ex: { summary?: string; topics?: string[]; keyPoints?: string[] } = {}
+      try { ex = JSON.parse(m.extractedContent || '{}') } catch {}
+      const summary = ex.summary || (m.content || '').slice(0, 250)
+      const topics = ex.topics?.length ? ` [topics: ${ex.topics.slice(0, 6).join(', ')}]` : ''
+      return summary ? `- "${m.name}": ${summary}${topics}` : null
+    })
+    .filter(Boolean)
+    .join('\n')
 
   const outlinePrompt = `Create a ${totalDays}-day preparation curriculum for this SPECIFIC event.
 
@@ -38,14 +54,17 @@ Event type: ${event.type.replace(/_/g, ' ')}
 Description: ${event.description}
 Goal: ${event.goalOutcome}
 Key skills needed: ${domain.keySkills.join(', ')}
-Core topics: ${domain.coreTopics.join(', ')}
+Core topics: ${domain.coreTopics.join(', ')}${materialsContext ? `
+
+The user provided these reference materials — weave their specific content, topics, and terminology into the daily plan (they are the highest-signal source of what will actually be tested/needed):
+${materialsContext}` : ''}
 
 Design ${totalDays} daily topics that are SPECIFIC to this exact subject matter — reference the actual concepts, not generic study advice. For a linear algebra exam, that means topics like "Vector spaces and subspaces", "Eigenvalues and eigenvectors", "Matrix diagonalization" — NOT "Core Subject Matter Review".
 
 Progress difficulty from foundational (day 1) to exam-level (final day). Vary lessonType across: MICRO_LESSON, FLASHCARD, QUIZ, SIMULATION, MOCK_EXAM.
 
 Return ONLY valid JSON (no markdown, no commentary), exactly this shape:
-{"dailyTopics":[{"day":1,"topic":"specific topic name","focus":"what to master this day","lessonType":"MICRO_LESSON","duration":25,"difficulty":2}],"skillTree":{"nodes":[{"id":"n1","name":"skill","prerequisites":[]}]},"weeklyMilestones":[{"week":1,"milestone":"specific milestone"}]}`
+{"dailyTopics":[{"day":1,"topic":"specific topic name","focus":"what to master this day","lessonType":"MICRO_LESSON","duration":25,"difficulty":2}],"skillTree":{"nodes":[{"id":"n1","name":"skill","prerequisites":[]}]},"weeklyMilestones":[{"week":1,"milestone":"specific milestone"}]}${languageDirective(language)}`
 
   const outlineResponse = await generateLLMResponse({
     feature: 'curriculum_generation',
@@ -115,20 +134,35 @@ Return ONLY valid JSON (no markdown, no commentary), exactly this shape:
   }
 }
 
-export async function generateDailyContent(lessonId: string, plan?: string): Promise<void> {
+export async function generateDailyContent(lessonId: string, plan?: string, language?: string): Promise<void> {
   const lesson = await prisma.lesson.findUnique({
     where: { id: lessonId },
-    include: { curriculum: { include: { event: true } } },
+    include: { curriculum: { include: { event: { include: { materials: true } } } } },
   })
 
   if (!lesson || !lesson.curriculum) return
+
+  // Fold in any user material that overlaps this lesson's topic
+  const materialNotes = (lesson.curriculum.event.materials || [])
+    .slice(0, 5)
+    .map(m => {
+      let ex: { summary?: string } = {}
+      try { ex = JSON.parse(m.extractedContent || '{}') } catch {}
+      return ex.summary ? `Reference "${m.name}": ${ex.summary.slice(0, 300)}` : null
+    })
+    .filter(Boolean)
+    .join('\n')
+
+  const context = lesson.curriculum.event.description +
+    (materialNotes ? `\n\nUser-provided reference material (use its specifics where relevant):\n${materialNotes}` : '') +
+    languageDirective(language)
 
   const content = await generateLessonContent(
     lesson.title,
     lesson.type,
     lesson.duration,
     lesson.difficulty,
-    lesson.curriculum.event.description,
+    context,
     { userId: lesson.curriculum.event.userId, userPlan: plan }
   )
 
@@ -136,4 +170,29 @@ export async function generateDailyContent(lessonId: string, plan?: string): Pro
     where: { id: lessonId },
     data: { content: content as object },
   })
+
+  // Quiz questions must exist as Quiz rows — the quiz UI reads the relation
+  // and answer attempts reference a quizId. Content JSON alone renders empty.
+  if (content.quiz?.length) {
+    const existing = await prisma.quiz.count({ where: { lessonId } })
+    if (existing === 0) {
+      const VALID_TYPES = ['MCQ', 'FREE_RESPONSE', 'TRUE_FALSE', 'CODE', 'SCENARIO'] as const
+      await prisma.quiz.createMany({
+        data: content.quiz.map(q => {
+          const rawType = String(q.type || 'MCQ').toUpperCase().replace(/[\s-]/g, '_')
+          const type = (VALID_TYPES as readonly string[]).includes(rawType) ? rawType : 'MCQ'
+          return {
+            lessonId,
+            question: q.question,
+            type: type as (typeof VALID_TYPES)[number],
+            options: q.options ?? undefined,
+            correctAnswer: String(q.correctAnswer ?? ''),
+            explanation: q.explanation || null,
+            difficulty: Math.min(5, Math.max(1, Number(q.difficulty) || 3)),
+            tags: q.tags || [],
+          }
+        }),
+      })
+    }
+  }
 }

@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   // read-only and doesn't persist between instances.
   const buffer = Buffer.from(await file.arrayBuffer())
   const textContent = buffer.toString('utf-8').slice(0, 20000)
-  const extracted = await processDocument(textContent, file.name)
+  const extracted = await processDocument(textContent, file.name, { userId: session.user.id, userPlan: session.user.plan })
 
   const material = await prisma.eventMaterial.create({
     data: {

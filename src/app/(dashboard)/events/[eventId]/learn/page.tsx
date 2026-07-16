@@ -31,10 +31,15 @@ export default function LearnPage() {
         const nextLesson = lessons.find((l: any) => !l.completed)
         if (!nextLesson) { if (!cancelled) { setLesson(null); setLoading(false) } return }
 
-        // If the lesson content hasn't been generated yet, fetch the lesson
-        // detail — the API generates it on demand (a single AI call).
+        // If the lesson's type-appropriate content hasn't been generated yet,
+        // fetch the lesson detail — the API generates it on demand (one AI
+        // call). Flashcard lessons need cards, quiz lessons need questions;
+        // checking only summary/keyPoints left those types permanently empty.
         const c = nextLesson.content
-        const needsContent = !c?.summary && !(c?.keyPoints?.length) && nextLesson.type !== 'FLASHCARD' && nextLesson.type !== 'QUIZ'
+        const needsContent =
+          nextLesson.type === 'FLASHCARD' ? !(c?.flashcards?.length)
+          : nextLesson.type === 'QUIZ' ? !(nextLesson.quizzes?.length)
+          : !c?.summary && !(c?.keyPoints?.length)
         if (needsContent) {
           if (!cancelled) { setLoading(false); setGenerating(true) }
           const lr = await fetch(`/api/lessons/${nextLesson.id}`)

@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { streamAnthropic } from '@/lib/llm/anthropic'
 import { getModelForPlan } from '@/lib/llm/providers'
 import { getRateLimit } from '@/lib/redis'
+import { languageDirective } from '@/lib/i18n'
 import { PLAN_FEATURES } from '@/types'
 
 export async function POST(req: Request) {
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Daily AI limit reached. Upgrade to Pro.', success: false }, { status: 429 })
   }
 
-  let systemPrompt = 'You are PrepareAI, an expert AI tutor helping users prepare for high-stakes events. Be encouraging, specific, and actionable. Keep responses concise and focused.'
+  let systemPrompt = 'You are PrepareAI, an expert AI tutor helping users prepare for high-stakes events. Be encouraging, specific, and actionable. Keep responses concise and focused.' + languageDirective(session.user.language)
 
   if (eventId) {
     const event = await prisma.event.findFirst({

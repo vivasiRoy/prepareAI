@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useSession } from 'next-auth/react'
+import { LanguageSwitcher, useLanguage } from '@/components/shared/LanguageProvider'
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { data: session } = useSession()
+  const { t } = useLanguage()
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20)
@@ -36,12 +38,12 @@ export function Navbar() {
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
             {[
-              { label: 'Features', href: '#features' },
-              { label: 'How It Works', href: '#demo' },
-              { label: 'Pricing', href: '#pricing' },
+              { label: t('features'), href: '#features' },
+              { label: t('howItWorks'), href: '#demo' },
+              { label: t('pricing'), href: '#pricing' },
             ].map(({ label, href }) => (
               <Link
-                key={label}
+                key={href}
                 href={href}
                 className="text-sm text-gray-500 hover:text-white transition-colors"
               >
@@ -52,14 +54,15 @@ export function Navbar() {
 
           {/* CTA */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             {session ? (
               <Link href="/dashboard">
-                <Button variant="gradient" size="sm">Go to Dashboard</Button>
+                <Button variant="gradient" size="sm">{t('goToDashboard')}</Button>
               </Link>
             ) : (
               <>
-                <Link href="/signin"><Button variant="ghost" size="sm">Sign In</Button></Link>
-                <Link href="/signin"><Button variant="gradient" size="sm">Start Free</Button></Link>
+                <Link href="/signin"><Button variant="ghost" size="sm">{t('signIn')}</Button></Link>
+                <Link href="/signup"><Button variant="gradient" size="sm">{t('getStarted')}</Button></Link>
               </>
             )}
           </div>
@@ -85,12 +88,12 @@ export function Navbar() {
           >
             <div className="px-4 py-4 space-y-1">
               {[
-                { label: 'Features', href: '#features' },
-                { label: 'How It Works', href: '#demo' },
-                { label: 'Pricing', href: '#pricing' },
+                { label: t('features'), href: '#features' },
+                { label: t('howItWorks'), href: '#demo' },
+                { label: t('pricing'), href: '#pricing' },
               ].map(({ label, href }) => (
                 <Link
-                  key={label}
+                  key={href}
                   href={href}
                   className="block text-gray-400 hover:text-white py-2.5 px-2 rounded-lg hover:bg-white/[0.04] transition-all"
                   onClick={() => setIsOpen(false)}
@@ -98,12 +101,13 @@ export function Navbar() {
                   {label}
                 </Link>
               ))}
+              <div className="flex justify-start px-2 py-1"><LanguageSwitcher /></div>
               <div className="pt-3 space-y-2 border-t border-white/[0.06]">
                 <Link href="/signin" className="block">
-                  <Button variant="ghost" className="w-full">Sign In</Button>
+                  <Button variant="ghost" className="w-full">{t('signIn')}</Button>
                 </Link>
-                <Link href="/signin" className="block">
-                  <Button variant="gradient" className="w-full">Start Free</Button>
+                <Link href="/signup" className="block">
+                  <Button variant="gradient" className="w-full">{t('getStarted')}</Button>
                 </Link>
               </div>
             </div>
