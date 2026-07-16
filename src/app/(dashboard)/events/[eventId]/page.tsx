@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PlayCircle, FileText, BarChart3, Edit, Calendar, Target, BookOpen, Zap, Network } from 'lucide-react'
 import { GenerateCurriculum } from '@/components/events/GenerateCurriculum'
 import { CurriculumMindmap } from '@/components/events/CurriculumMindmap'
+import { ShareReadinessCard } from '@/components/events/ShareReadinessCard'
 import type { EventWithRelations } from '@/types'
 
 export default async function EventDetailPage({ params }: { params: { eventId: string } }) {
@@ -63,6 +64,13 @@ export default async function EventDetailPage({ params }: { params: { eventId: s
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <ShareReadinessCard
+            eventTitle={event.title}
+            eventType={event.type}
+            readiness={progress > 0 ? Math.max(event.successScore, progress) : event.successScore}
+            daysToGo={daysUntil}
+            userId={session.user.id}
+          />
           <Link href={`/events/${event.id}/edit`}><Button variant="outline" size="sm" className="border-white/20"><Edit className="w-4 h-4 mr-1.5" /> Edit</Button></Link>
           <Link href={`/events/${event.id}/mock-exam`}>
             <Button variant="outline" size="sm" className={
