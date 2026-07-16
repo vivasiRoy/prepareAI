@@ -137,3 +137,20 @@ Every dashboard has an invite card (WhatsApp/X/LinkedIn + copy link, `?ref=` tra
 **Measure exactly one funnel:** visit → event-type click on landing → signup → event created → first lesson done → upgrade. UTM convention: `utm_source={tiktok|linkedin|x|ph|reddit}&utm_medium={bio|post|comment}&utm_campaign=ignition7`.
 
 **Rule of the campaign:** never argue, never spam, always show the screen. The product demos itself — your job is only to point the camera.
+
+---
+
+## Creatify AI video-ad prompts
+
+**Main prompt (Panic to Prepared, 30s / 9:16 / UGC style):** product URL prepareai.co. Audience: students & young professionals 18-34 with an imminent exam/interview. Arc: panic → relief → confidence.
+- S1 0-3s HOOK: stressed person, night, phone. VO: "My exam is in 7 days and I haven't started." Text: "7 DAYS. ZERO PREP. 😰"
+- S2 3-8s: app asks "What are you preparing for?" → tap Academic exam → "Within days — help!". VO: "So I told this AI exactly that…" Text: "it asked me 2 questions"
+- S3 8-15s: mindmap blooms, daily lesson appears. VO: "…and it built my entire week in 60 seconds. Every day planned. Quizzes. Flashcards. A mock exam." Text: "FULL PLAN IN 60 SECONDS ⚡"
+- S4 15-22s: slider to 😵 → "too much jargon" → lesson rewrites. VO: "When I didn't understand, I told it — and it rewrote the lesson a completely different way. Instantly." Text: "it RE-TEACHES itself when you're lost 🤯"
+- S5 22-28s: readiness ring 34%→78%. VO: "It even tells me the exact percent chance I'd pass today." Text: "34% → 78% READY"
+- S6 28-30s CTA: gradient end card. VO: "It's free. PrepareAI dot co." Text: "prepareai.co — free plan, no card ⚡"
+- Style: dark UI aesthetic (violet #7c3aed / cyan #22d3ee), cuts every 2-3s, bold outlined captions, casual mid-20s avatar, fast genuine delivery, never salesy.
+
+**Hook variants for A/B:** job-interview ("fed the AI the job description… it knew what they'd ask before I did") · certification ("Third time booking my AWS exam. First time an AI told me honestly whether I'd pass").
+
+**Settings:** 9:16 · 30s · UGC style · captions ON · end-card CTA "Try free → prepareai.co" · generate 3-4 variations, keep the two strongest first-2-second hooks.
