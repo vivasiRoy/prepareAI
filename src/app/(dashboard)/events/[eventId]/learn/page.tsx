@@ -13,11 +13,29 @@ import { useSpeech } from '@/hooks/use-speech'
 import { useLanguage } from '@/components/shared/LanguageProvider'
 import type { LessonWithQuizzes, FlashCard } from '@/types'
 
+// ─── Content normalization ──────────────────────────────────────────────────
+
+/** LLM output occasionally returns objects where strings are expected
+ *  ({point: "..."} instead of "..."). Coerce defensively — a shape variance
+ *  must never crash the lesson. */
+function toText(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (v == null) return ''
+  if (typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    const candidate = o.point ?? o.text ?? o.content ?? o.example ?? o.description ?? o.title
+    if (typeof candidate === 'string') return candidate
+    try { return Object.values(o).filter(x => typeof x === 'string').join(' — ') || JSON.stringify(v) } catch { return '' }
+  }
+  return String(v)
+}
+
 // ─── Highlighting ────────────────────────────────────────────────────────────
 
 /** Wrap every occurrence of the given terms in <mark>. AI terms and user
  *  highlights get different styling. */
-function highlightText(text: string, aiTerms: string[], userTerms: string[]): React.ReactNode {
+function highlightText(raw: unknown, aiTerms: string[], userTerms: string[]): React.ReactNode {
+  const text = toText(raw)
   if (!text) return text
   const all = [
     ...userTerms.map(t => ({ t, user: true })),
@@ -200,17 +218,22 @@ function LearnPageInner() {
   }
 
   const content = lesson?.content as any
-  const aiTerms: string[] = useMemo(() => content?.keyTerms || [], [content])
-  const furtherReading: { title: string; url: string }[] = content?.furtherReading || []
+  const aiTerms: string[] = useMemo(
+    () => (Array.isArray(content?.keyTerms) ? content.keyTerms.map(toText).filter(Boolean) : []),
+    [content]
+  )
+  const furtherReading: { title: string; url: string }[] = (Array.isArray(content?.furtherReading) ? content.furtherReading : [])
+    .filter((r: any) => r && typeof r.url === 'string')
+    .map((r: any) => ({ title: toText(r.title) || r.url, url: r.url }))
   const flashcards: FlashCard[] = content?.flashcards || []
   const quizzes = (lesson?.quizzes || []).map(q => ({ ...q, id: q.id, options: (q.options as string[]) || [], tags: q.tags || [] }))
 
   const listenText = useMemo(() => {
     if (!lesson) return ''
     const parts = [lesson.title]
-    if (content?.summary) parts.push(content.summary)
-    if (content?.keyPoints?.length) parts.push('Key points. ' + content.keyPoints.join('. '))
-    if (content?.examples?.length) parts.push('Examples. ' + content.examples.join('. '))
+    if (content?.summary) parts.push(toText(content.summary))
+    if (content?.keyPoints?.length) parts.push('Key points. ' + content.keyPoints.map(toText).join('. '))
+    if (content?.examples?.length) parts.push('Examples. ' + content.examples.map(toText).join('. '))
     return parts.join('\n')
   }, [lesson, content])
 

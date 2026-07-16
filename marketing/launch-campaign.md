@@ -154,3 +154,20 @@ Every dashboard has an invite card (WhatsApp/X/LinkedIn + copy link, `?ref=` tra
 **Hook variants for A/B:** job-interview ("fed the AI the job description… it knew what they'd ask before I did") · certification ("Third time booking my AWS exam. First time an AI told me honestly whether I'd pass").
 
 **Settings:** 9:16 · 30s · UGC style · captions ON · end-card CTA "Try free → prepareai.co" · generate 3-4 variations, keep the two strongest first-2-second hooks.
+
+---
+
+## Creatify prompt — Product Hunt launch video (16:9, 60s)
+
+> Create a 60-second landscape (16:9) product-launch video for **PrepareAI** (prepareai.co) aimed at the Product Hunt community — makers, early adopters, tech professionals. Tone: confident product demo with a genuine founder voice. NOT a hype ad — a clear "here's what it does and why nothing else does this."
+>
+> S1 0-5s HOOK: dark gradient title card, bolt logo. VO (calm, direct): "Every study app gives you content. None of them notice when you're lost. So we built one that does." Text: "PrepareAI ⚡"
+> S2 5-15s: screen recording of the landing page asking "What are you preparing for?" — tap Coding interview → the entire page rebuilds. VO: "Tell PrepareAI your event — an interview, an exam, a pitch — and it builds a day-by-day AI curriculum around it in about sixty seconds."
+> S3 15-25s: the mindmap. VO: "Your whole plan is a living map. Every node is a lesson — sized by importance, colored by phase, tracked by readiness." Text: "Your plan as a living mindmap"
+> S4 25-40s THE DIFFERENTIATOR: lesson → understanding slider → drag to 😵 → type "too much jargon" → AI rewrites the lesson. VO: "And here's the part we're proudest of. Finish a lesson, rate your understanding honestly — and if you're lost, PrepareAI rewrites the lesson with a completely different teaching approach. Instantly. It's the feedback loop human tutors have and software never did." Text: "It re-teaches itself 🤯"
+> S5 40-52s: rapid montage — mock exam verdict, voice reading a lesson, printable sheet, readiness ring climbing, share card. VO: "Mock exams that tell you honestly whether you'd pass today. Lessons read aloud. Printable study sheets. All of it adapting to you, in eight languages."
+> S6 52-60s CTA: end card. VO: "PrepareAI. Prepare for anything. Win everything. Free plan at prepareai.co — we're live on Product Hunt today." Text: "prepareai.co · Live on Product Hunt 🐱"
+>
+> Style: dark UI aesthetic (violet #7c3aed → cyan #22d3ee on near-black), smooth cross-fades between product scenes (not TikTok jump cuts), subtle synth backing track, captions on. If using an avatar: 25-35, smart-casual, measured founder energy.
+
+**PH video note:** Product Hunt takes videos as a YouTube link — upload the Creatify export to the PrepareAI YouTube channel (unlisted is fine) and paste the URL into the listing.

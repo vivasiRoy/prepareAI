@@ -5,6 +5,20 @@ import { PrintButton } from './PrintButton'
 
 export const metadata = { title: 'Print Lesson' }
 
+// LLM content occasionally returns objects where strings are expected —
+// coerce so a shape variance can't crash the print render.
+function toText(v: unknown): string {
+  if (typeof v === 'string') return v
+  if (v == null) return ''
+  if (typeof v === 'object') {
+    const o = v as Record<string, unknown>
+    const c = o.point ?? o.text ?? o.content ?? o.example ?? o.front ?? o.title
+    if (typeof c === 'string') return c
+    try { return Object.values(o).filter(x => typeof x === 'string').join(' — ') } catch { return '' }
+  }
+  return String(v)
+}
+
 // A clean, branded, print-optimized rendering of one lesson — users hit
 // "Print / Save as PDF" and get a physical-ready copy.
 export default async function PrintLessonPage({ params }: { params: { lessonId: string } }) {
@@ -55,7 +69,7 @@ export default async function PrintLessonPage({ params }: { params: { lessonId: 
         {content?.summary && (
           <section className="mb-8">
             <h2 className="font-sans text-xs font-bold uppercase tracking-[0.15em] text-violet-700 mb-2">Overview</h2>
-            <p className="leading-relaxed text-[15px]">{content.summary}</p>
+            <p className="leading-relaxed text-[15px]">{toText(content.summary)}</p>
           </section>
         )}
 
@@ -66,7 +80,7 @@ export default async function PrintLessonPage({ params }: { params: { lessonId: 
               {content.keyPoints.map((p: string, i: number) => (
                 <li key={i} className="flex gap-3 text-[15px] leading-relaxed">
                   <span className="font-sans font-bold text-violet-700 shrink-0">{String(i + 1).padStart(2, '0')}</span>
-                  <span>{p}</span>
+                  <span>{toText(p)}</span>
                 </li>
               ))}
             </ol>
@@ -77,9 +91,9 @@ export default async function PrintLessonPage({ params }: { params: { lessonId: 
           <section className="mb-8">
             <h2 className="font-sans text-xs font-bold uppercase tracking-[0.15em] text-violet-700 mb-3">Worked Examples</h2>
             <div className="space-y-3">
-              {content.examples.map((ex: string, i: number) => (
+              {content.examples.map((ex: unknown, i: number) => (
                 <div key={i} className="p-4 rounded-lg border border-neutral-200 bg-neutral-50 text-[14px] leading-relaxed">
-                  {ex}
+                  {toText(ex)}
                 </div>
               ))}
             </div>
@@ -99,8 +113,8 @@ export default async function PrintLessonPage({ params }: { params: { lessonId: 
               <tbody>
                 {content.flashcards.map((f: any, i: number) => (
                   <tr key={i} className="border-b border-neutral-200 align-top">
-                    <td className="py-2.5 pr-4 font-medium">{f.front}</td>
-                    <td className="py-2.5">{f.back}</td>
+                    <td className="py-2.5 pr-4 font-medium">{toText(f?.front)}</td>
+                    <td className="py-2.5">{toText(f?.back)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -139,7 +153,7 @@ export default async function PrintLessonPage({ params }: { params: { lessonId: 
             <h2 className="font-sans text-xs font-bold uppercase tracking-[0.15em] text-violet-700 mb-2">Further Reading</h2>
             <ul className="space-y-1 text-[13px]">
               {content.furtherReading.map((r: any, i: number) => (
-                <li key={i}>{r.title} — <span className="text-neutral-500">{r.url}</span></li>
+                <li key={i}>{toText(r?.title)} — <span className="text-neutral-500">{toText(r?.url)}</span></li>
               ))}
             </ul>
           </section>
