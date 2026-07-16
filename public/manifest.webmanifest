@@ -1,0 +1,21 @@
+{
+  "name": "PrepareAI — AI-Powered Preparation",
+  "short_name": "PrepareAI",
+  "description": "AI builds your personalized preparation plan for interviews, exams, pitches, and any high-stakes event.",
+  "id": "/",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#09090f",
+  "theme_color": "#09090f",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "url": "/dashboard", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "New Event", "url": "/events/new", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

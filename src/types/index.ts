@@ -85,6 +85,10 @@ export interface GeneratedLessonContent {
   quiz?: GeneratedQuiz[]
   simulationContext?: string
   evaluationCriteria?: string[]
+  /** 5-10 crucial terms that appear verbatim in the content — auto-highlighted in the UI */
+  keyTerms?: string[]
+  /** Real external resources for diving deeper */
+  furtherReading?: { title: string; url: string }[]
 }
 
 export interface GeneratedLesson {

@@ -153,8 +153,26 @@ export async function generateDailyContent(lessonId: string, plan?: string, lang
     .filter(Boolean)
     .join('\n')
 
+  // Adaptivity: topics the learner recently rated hard shape how new
+  // lessons are written (more scaffolding where they struggled).
+  const struggles = await prisma.attempt.findMany({
+    where: {
+      userId: lesson.curriculum.event.userId,
+      confidence: { lte: 2 },
+      createdAt: { gte: new Date(Date.now() - 14 * 86400000) },
+      lesson: { curriculumId: lesson.curriculumId },
+    },
+    include: { lesson: { select: { title: true } } },
+    orderBy: { createdAt: 'desc' },
+    take: 4,
+  }).catch(() => [] as any[])
+  const struggleNote = struggles.length
+    ? `\n\nThe learner recently found these topics difficult — connect new ideas back to them gently and avoid assuming mastery: ${Array.from(new Set(struggles.map(s => s.lesson?.title).filter(Boolean))).join('; ')}`
+    : ''
+
   const context = lesson.curriculum.event.description +
     (materialNotes ? `\n\nUser-provided reference material (use its specifics where relevant):\n${materialNotes}` : '') +
+    struggleNote +
     languageDirective(language)
 
   const content = await generateLessonContent(

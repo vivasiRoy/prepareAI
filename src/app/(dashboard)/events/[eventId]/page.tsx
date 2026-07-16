@@ -9,8 +9,9 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { PlayCircle, FileText, BarChart3, Edit, Calendar, Target, BookOpen, Zap } from 'lucide-react'
+import { PlayCircle, FileText, BarChart3, Edit, Calendar, Target, BookOpen, Zap, Network } from 'lucide-react'
 import { GenerateCurriculum } from '@/components/events/GenerateCurriculum'
+import { CurriculumMindmap } from '@/components/events/CurriculumMindmap'
 import type { EventWithRelations } from '@/types'
 
 export default async function EventDetailPage({ params }: { params: { eventId: string } }) {
@@ -111,12 +112,31 @@ export default async function EventDetailPage({ params }: { params: { eventId: s
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="curriculum" className="w-full">
+      <Tabs defaultValue={event.curriculum ? 'map' : 'curriculum'} className="w-full">
         <TabsList className="bg-white/5 border border-white/10">
+          {event.curriculum && <TabsTrigger value="map"><Network className="w-4 h-4 mr-1.5" /> Map</TabsTrigger>}
           <TabsTrigger value="curriculum"><BookOpen className="w-4 h-4 mr-1.5" /> Curriculum</TabsTrigger>
           <TabsTrigger value="materials"><FileText className="w-4 h-4 mr-1.5" /> Materials</TabsTrigger>
           <TabsTrigger value="progress"><BarChart3 className="w-4 h-4 mr-1.5" /> Progress</TabsTrigger>
         </TabsList>
+
+        {event.curriculum && (
+          <TabsContent value="map" className="mt-6">
+            <CurriculumMindmap
+              eventId={event.id}
+              eventTitle={event.title}
+              lessons={event.curriculum.lessons.map(l => ({
+                id: l.id,
+                title: l.title,
+                type: l.type,
+                dayNumber: l.dayNumber,
+                difficulty: l.difficulty,
+                completed: l.completed,
+                lastScore: l.attempts?.[0]?.score ?? null,
+              }))}
+            />
+          </TabsContent>
+        )}
 
         <TabsContent value="curriculum" className="mt-6">
           {event.curriculum ? (
@@ -130,11 +150,9 @@ export default async function EventDetailPage({ params }: { params: { eventId: s
                     <p className={`font-medium ${lesson.completed ? 'text-gray-400 line-through' : 'text-white'}`}>{lesson.title}</p>
                     <p className="text-xs text-gray-500 mt-0.5">{lesson.type.replace('_', ' ')} • {lesson.duration} min • Difficulty {lesson.difficulty}/5</p>
                   </div>
-                  {!lesson.completed && (
-                    <Link href={`/events/${event.id}/learn`}>
-                      <Button size="sm" variant="ghost" className="shrink-0">Start</Button>
-                    </Link>
-                  )}
+                  <Link href={`/events/${event.id}/learn?lesson=${lesson.id}`}>
+                    <Button size="sm" variant="ghost" className="shrink-0">{lesson.completed ? 'Review' : 'Start'}</Button>
+                  </Link>
                 </div>
               ))}
             </div>

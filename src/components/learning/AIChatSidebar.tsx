@@ -1,11 +1,13 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, Send, X, Sparkles, Bot } from 'lucide-react'
+import { MessageSquare, Send, X, Sparkles, Bot, Mic, MicOff, Volume2, Square } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { useSession } from 'next-auth/react'
+import { useSpeech, useSpeechInput } from '@/hooks/use-speech'
+import { useLanguage } from '@/components/shared/LanguageProvider'
 
 interface Message { role: 'user' | 'assistant'; content: string }
 
@@ -22,7 +24,14 @@ export function AIChatSidebar({ eventId, lessonId, suggestedQuestions = [] }: AI
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [voiceMode, setVoiceMode] = useState(false)
   const { data: session } = useSession()
+  const { lang } = useLanguage()
+  const tts = useSpeech(lang)
+  const stt = useSpeechInput(lang, (text) => {
+    // Dictated speech goes straight to the tutor
+    sendMessage(text)
+  })
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -62,6 +71,8 @@ export function AIChatSidebar({ eventId, lessonId, suggestedQuestions = [] }: AI
         accumulated += chunk
         setMessages(m => m.map((msg, i) => i === m.length - 1 ? { ...msg, content: accumulated } : msg))
       }
+      // In voice mode, speak the tutor's reply aloud
+      if (voiceMode && accumulated) tts.speak(accumulated)
     } catch (err) {
       setMessages(m => m.map((msg, i) => i === m.length - 1 ? { ...msg, content: 'Sorry, I encountered an error. Please try again.' } : msg))
     } finally {
@@ -94,10 +105,22 @@ export function AIChatSidebar({ eventId, lessonId, suggestedQuestions = [] }: AI
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-cyan-500 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-white" />
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="font-semibold text-white text-sm">AI Tutor</p>
                 <p className="text-xs text-gray-400">Powered by Claude</p>
               </div>
+              {tts.supported && (
+                <button
+                  onClick={() => {
+                    if (tts.speaking) tts.stop()
+                    setVoiceMode(v => !v)
+                  }}
+                  title={voiceMode ? 'Voice replies on — click to mute' : 'Read replies aloud'}
+                  className={`p-2 rounded-lg border transition-all ${voiceMode ? 'border-violet-500/50 text-violet-300 bg-violet-500/10' : 'border-white/10 text-gray-500 hover:text-white'}`}
+                >
+                  {tts.speaking ? <Square className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </button>
+              )}
             </div>
 
             {/* Messages */}
@@ -140,10 +163,23 @@ export function AIChatSidebar({ eventId, lessonId, suggestedQuestions = [] }: AI
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(input) } }}
-                  placeholder="Ask your AI tutor..."
+                  placeholder={stt.listening ? 'Listening…' : 'Ask your AI tutor...'}
                   className="min-h-0 h-10 resize-none bg-white/5 border-white/20 text-sm"
                   rows={1}
                 />
+                {stt.supported && (
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className={stt.listening ? 'border-red-500/60 text-red-400 animate-pulse' : 'border-white/20'}
+                    onClick={() => {
+                      if (stt.listening) { stt.stop() } else { setVoiceMode(true); stt.start() }
+                    }}
+                    title={stt.listening ? 'Stop listening' : 'Speak to your tutor'}
+                  >
+                    {stt.listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </Button>
+                )}
                 <Button size="icon" variant="gradient" onClick={() => sendMessage(input)} disabled={!input.trim() || loading}>
                   <Send className="w-4 h-4" />
                 </Button>

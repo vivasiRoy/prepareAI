@@ -85,7 +85,7 @@ export async function generateLessonContent(
     systemPrompt: 'You are an expert instructional designer. Create engaging, practical, subject-specific lesson content. Respond with ONLY valid JSON.',
     messages: [{
       role: 'user',
-      content: "Create a " + duration + "-minute " + type.replace('_', ' ').toLowerCase() + " lesson about: “" + topic + "”\nDifficulty: " + difficulty + "/5\n" + (context || '') + typeRequirement + "\n\nReturn JSON: {summary, keyPoints: string[], examples: string[], flashcards?: [{front, back, hint?}], quiz?: [{question, type, options?, correctAnswer, explanation, difficulty}], simulationContext?, evaluationCriteria?: string[]}",
+      content: "Create a " + duration + "-minute " + type.replace('_', ' ').toLowerCase() + " lesson about: “" + topic + "”\nDifficulty: " + difficulty + "/5\n" + (context || '') + typeRequirement + "\n\nALWAYS also include:\n- keyTerms: 5-10 crucial terms/short phrases copied VERBATIM from your summary or keyPoints (used for auto-highlighting)\n- furtherReading: 2-4 links to REAL, well-known resources (official docs, Wikipedia, established YouTube channels/courses). Only include URLs you are confident exist — prefer stable top-level pages over deep links.\n\nReturn JSON: {summary, keyPoints: string[], examples: string[], keyTerms: string[], furtherReading: [{title, url}], flashcards?: [{front, back, hint?}], quiz?: [{question, type, options?, correctAnswer, explanation, difficulty}], simulationContext?, evaluationCriteria?: string[]}",
     }],
     maxTokens: 5000,
     temperature: 0.8,

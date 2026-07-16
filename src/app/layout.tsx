@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
@@ -13,10 +13,23 @@ export const metadata: Metadata = {
   description: 'PrepareAI builds your personalized preparation curriculum, adapts to your learning, and tracks your success probability for any high-stakes event.',
   keywords: ['AI preparation', 'interview prep', 'exam prep', 'adaptive learning', 'success probability'],
   authors: [{ name: 'PrepareAI' }],
+  manifest: '/manifest.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'PrepareAI',
+  },
   openGraph: {
     title: 'PrepareAI — Your GPS for High-Stakes Success',
     description: 'Prepare for interviews, exams, presentations, and negotiations with AI that adapts to how you learn.',
-    url: 'https://prepareai-777.web.app',
+    url: 'https://prepareai.co',
     siteName: 'PrepareAI',
     locale: 'en_US',
     type: 'website',
@@ -27,6 +40,12 @@ export const metadata: Metadata = {
     description: 'AI-powered preparation for any high-stakes event',
   },
   robots: { index: true, follow: true },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#09090f',
+  width: 'device-width',
+  initialScale: 1,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
