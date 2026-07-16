@@ -41,3 +41,12 @@ next-env.d.ts
 
 # redis
 dump.rdb
+
+# local secrets / scratch
+prismaAPIdets.txt
+
+# generated prisma client (rebuilt by `prisma generate` on install/build)
+/src/generated/
+
+# firebase local cache
+.firebase/

@@ -1,48 +1,15 @@
 import { Navbar } from '@/components/shared/Navbar'
-import { Hero } from '@/components/landing/Hero'
+import { LandingExperience } from '@/components/landing/LandingExperience'
 import { Features } from '@/components/landing/Features'
 import { Pricing } from '@/components/landing/Pricing'
 import { Zap, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
-const useCases = [
-  { type: 'Software Interview', outcome: 'Land FAANG offers', desc: 'DS&A, system design, behavioral — AI-personalized for your target company.', emoji: '💻' },
-  { type: 'Bar Exam', outcome: 'Pass first attempt', desc: 'Constitutional law, torts, contracts — spaced repetition and essay practice.', emoji: '⚖️' },
-  { type: 'Sales Pitch', outcome: 'Close more deals', desc: 'Objection handling, pitch structure, roleplay with tough prospects.', emoji: '💰' },
-  { type: 'Certification', outcome: 'Ace on the first try', desc: 'AWS, PMP, CPA — practice questions aligned to the actual exam blueprint.', emoji: '🏆' },
-  { type: 'Negotiation', outcome: 'Win better terms', desc: 'BATNA analysis, anchoring strategy, scenario simulations.', emoji: '🤝' },
-  { type: 'Presentation', outcome: 'Command the room', desc: 'Slide structure, delivery rehearsal, Q&A preparation.', emoji: '🎤' },
-]
-
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-surface-0">
       <Navbar />
-      <Hero />
-
-      {/* Use cases */}
-      <section id="use-cases" className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <p className="text-violet-400 text-sm font-semibold tracking-widest uppercase mb-3">Use Cases</p>
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Built for Every High-Stakes Event</h2>
-            <p className="text-gray-400 text-lg">Whatever you&apos;re preparing for, PrepareAI has you covered</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {useCases.map((uc) => (
-              <div
-                key={uc.type}
-                className="group p-6 rounded-xl border border-white/[0.07] bg-white/[0.025] hover:border-violet-500/25 hover:bg-white/[0.04] hover:shadow-[0_0_30px_-8px_rgba(124,58,237,0.25)] transition-all duration-300 cursor-default"
-              >
-                <div className="text-3xl mb-4">{uc.emoji}</div>
-                <h3 className="text-base font-semibold text-white mb-1">{uc.type}</h3>
-                <p className="text-violet-400 text-xs font-semibold uppercase tracking-wide mb-3">{uc.outcome}</p>
-                <p className="text-gray-500 text-sm leading-relaxed">{uc.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <LandingExperience />
 
       <Features />
 
@@ -114,8 +81,8 @@ export default function LandingPage() {
             <span className="font-bold bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">PrepareAI</span>
           </div>
           <div className="flex gap-8 text-sm text-gray-500">
-            <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
-            <Link href="#" className="hover:text-white transition-colors">Terms</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
             <Link href="mailto:royvivasi@gmail.com" className="hover:text-white transition-colors">Contact</Link>
           </div>
           <p className="text-xs text-gray-600">© 2025 PrepareAI. Built with Claude AI.</p>

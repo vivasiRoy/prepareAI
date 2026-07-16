@@ -35,10 +35,14 @@ export function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-8">
-            {['Features', 'Pricing', 'Use Cases'].map(label => (
+            {[
+              { label: 'Features', href: '#features' },
+              { label: 'How It Works', href: '#demo' },
+              { label: 'Pricing', href: '#pricing' },
+            ].map(({ label, href }) => (
               <Link
                 key={label}
-                href={`#${label.toLowerCase().replace(' ', '-')}`}
+                href={href}
                 className="text-sm text-gray-500 hover:text-white transition-colors"
               >
                 {label}
@@ -82,8 +86,8 @@ export function Navbar() {
             <div className="px-4 py-4 space-y-1">
               {[
                 { label: 'Features', href: '#features' },
+                { label: 'How It Works', href: '#demo' },
                 { label: 'Pricing', href: '#pricing' },
-                { label: 'Use Cases', href: '#use-cases' },
               ].map(({ label, href }) => (
                 <Link
                   key={label}

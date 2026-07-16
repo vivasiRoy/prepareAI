@@ -48,12 +48,17 @@ export function Pricing() {
   const router = useRouter()
 
   const handleCTA = async (planId: string) => {
-    if (!session) { router.push('/signin'); return }
+    if (!session) { router.push('/signup'); return }
     if (planId === 'FREE') { router.push('/dashboard'); return }
     if (planId === 'ENTERPRISE') { window.location.href = 'mailto:royvivasi@gmail.com?subject=PrepareAI Enterprise'; return }
-    const res = await fetch('/api/stripe/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan: planId }) })
-    const data = await res.json()
-    if (data.data?.url) window.location.href = data.data.url
+    try {
+      const res = await fetch('/api/stripe/create-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ plan: planId }) })
+      const data = await res.json()
+      if (data.data?.url) { window.location.href = data.data.url; return }
+      router.push('/billing')
+    } catch {
+      router.push('/billing')
+    }
   }
 
   return (

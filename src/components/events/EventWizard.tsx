@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Calendar, Upload, Brain, Target, ChevronRight, ChevronLeft, Loader2, Briefcase, BookOpen, Award, Mic, Users, DollarSign, Scale, GraduationCap, MoreHorizontal } from 'lucide-react'
@@ -33,14 +33,29 @@ export function EventWizard() {
   })
   const router = useRouter()
 
+  // Pre-select the event type the visitor chose on the landing page (stored
+  // there before signup), so the wizard continues where they left off.
+  useEffect(() => {
+    try {
+      const intent = localStorage.getItem('prepareai.intent')
+      if (intent && eventTypes.some(t => t.id === intent)) {
+        setForm(f => (f.type ? f : { ...f, type: intent }))
+        localStorage.removeItem('prepareai.intent')
+      }
+    } catch {}
+  }, [])
+
   const steps = [
     { title: 'What are you preparing for?', icon: Target },
     { title: 'Tell us about your event', icon: Calendar },
     { title: 'Your success criteria', icon: Brain },
   ]
 
+  const [error, setError] = useState('')
+
   const handleSubmit = async () => {
     setLoading(true)
+    setError('')
     try {
       const res = await fetch('/api/events', {
         method: 'POST',
@@ -48,10 +63,31 @@ export function EventWizard() {
         body: JSON.stringify({ ...form, targetDate: new Date(form.targetDate).toISOString() }),
       })
       const data = await res.json()
-      if (data.success) {
-        router.push(`/events/${data.data.id}`)
+      if (!data.success) {
+        setError(data.error || 'Failed to create event')
+        setLoading(false)
+        return
       }
-    } finally {
+
+      const eventId = data.data.id
+
+      // Generate the curriculum synchronously (serverless-safe). This can take
+      // 20-40s as it calls the AI to build the plan and the first lessons.
+      const genRes = await fetch(`/api/events/${eventId}/curriculum`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      })
+
+      // Even if generation fails, navigate to the event page — it has a
+      // "Generate curriculum" fallback button the user can retry with.
+      if (!genRes.ok) {
+        console.error('Curriculum generation failed:', await genRes.text())
+      }
+
+      router.push(`/events/${eventId}`)
+    } catch (err) {
+      setError('Something went wrong. Please try again.')
       setLoading(false)
     }
   }
@@ -122,8 +158,22 @@ export function EventWizard() {
         )}
       </AnimatePresence>
 
+      {error && (
+        <div className="mt-6 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="mt-6 p-4 rounded-xl bg-violet-500/[0.07] border border-violet-500/20 text-center">
+          <Loader2 className="w-6 h-6 mx-auto mb-2 animate-spin text-violet-400" />
+          <p className="text-sm text-white font-medium">Building your personalised plan…</p>
+          <p className="text-xs text-gray-400 mt-1">The AI is designing your curriculum and first lessons. This can take up to a minute — please don&apos;t close this page.</p>
+        </div>
+      )}
+
       <div className="flex justify-between mt-8">
-        <Button variant="outline" onClick={() => setStep(s => s - 1)} disabled={step === 0} className="border-white/20">
+        <Button variant="outline" onClick={() => setStep(s => s - 1)} disabled={step === 0 || loading} className="border-white/20">
           <ChevronLeft className="w-4 h-4 mr-1" /> Back
         </Button>
         {step < steps.length - 1 ? (
