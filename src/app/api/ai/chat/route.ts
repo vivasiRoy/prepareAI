@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { streamAnthropic } from '@/lib/llm/anthropic'
+import { getModelForPlan } from '@/lib/llm/providers'
 import { getRateLimit } from '@/lib/redis'
 import { PLAN_FEATURES } from '@/types'
 
@@ -36,6 +37,7 @@ export async function POST(req: Request) {
   }
 
   const stream = await streamAnthropic({
+    model: getModelForPlan(session.user.plan, 'anthropic'),
     systemPrompt,
     messages,
     maxTokens: 1000,

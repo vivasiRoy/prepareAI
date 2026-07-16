@@ -26,7 +26,7 @@ PrepareAI is a full-stack SaaS platform that turns any high-stakes event — a j
 | Database | Prisma ORM + PostgreSQL |
 | Cache / Queue | Redis (Upstash) |
 | Auth | NextAuth.js (Google, GitHub, credentials) |
-| AI | Anthropic Claude (claude-sonnet-4-5) |
+| AI | Anthropic Claude (Haiku 4.5 / Sonnet 4.6 / Opus 4.8 by plan) |
 | Payments | Stripe |
 | UI | Tailwind CSS + ShadCN/ui |
 | Animation | Framer Motion |
@@ -110,7 +110,7 @@ ADMIN_EMAIL="royvivasi@gmail.com"
 
 # AI Config (optional overrides)
 DEFAULT_LLM_PROVIDER="anthropic"
-DEFAULT_MODEL="claude-sonnet-4-5-20251001"
+DEFAULT_MODEL="claude-sonnet-4-6"
 ```
 
 ---
@@ -169,9 +169,7 @@ To add the seed script to `package.json`, include:
 
 Visit `/admin` to access the admin dashboard. Any user whose email matches the `ADMIN_EMAIL` environment variable is automatically promoted to `ADMIN` role on first sign-in.
 
-Default admin credentials (after seeding):
-- **Email:** royvivasi@gmail.com
-- **Password:** admin123!
+Seeding creates the admin user with the password from the `SEED_ADMIN_PASSWORD` environment variable (or a random one printed to the console if unset). Never commit or share this password.
 
 The admin dashboard includes:
 - `/admin` — User management and plan controls

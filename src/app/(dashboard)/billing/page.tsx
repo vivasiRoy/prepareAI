@@ -1,6 +1,6 @@
 'use client'
 import { useSession } from 'next-auth/react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CreditCard, Check, ExternalLink, Zap, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -15,29 +15,73 @@ const planDetails = {
 }
 
 export default function BillingPage() {
-  const { data: session } = useSession()
+  const { data: session, update: updateSession } = useSession()
   const [loading, setLoading] = useState<string | null>(null)
+  const [usage, setUsage] = useState<{ activeEvents: number; aiCallsToday: number } | null>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
   const currentPlan = session?.user?.plan || 'FREE'
   const details = planDetails[currentPlan]
   const features = PLAN_FEATURES[currentPlan]
 
+  useEffect(() => {
+    fetch('/api/users/me')
+      .then(r => r.json())
+      .then(res => {
+        if (res.data) {
+          setUsage({
+            activeEvents: res.data._count?.events ?? 0,
+            aiCallsToday: res.data.usage?.aiCallsToday ?? 0,
+          })
+        }
+      })
+      .catch(() => {})
+    // After Stripe checkout success, refresh the session so the new plan
+    // shows without a re-login.
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('success') === 'true') {
+      setShowSuccess(true)
+      updateSession().catch(() => {})
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const [billingError, setBillingError] = useState('')
+
   const handleUpgrade = async (plan: 'PRO' | 'ENTERPRISE') => {
     setLoading(plan)
-    const res = await fetch('/api/stripe/create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan }),
-    })
-    const data = await res.json()
-    if (data.data?.url) window.location.href = data.data.url
+    setBillingError('')
+    try {
+      const res = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+      })
+      const data = await res.json()
+      if (data.data?.url) {
+        window.location.href = data.data.url
+        return
+      }
+      setBillingError(data.error || 'Could not start checkout. Please try again.')
+    } catch {
+      setBillingError('Could not start checkout. Please try again.')
+    }
     setLoading(null)
   }
 
   const handlePortal = async () => {
     setLoading('portal')
-    const res = await fetch('/api/stripe/portal', { method: 'POST' })
-    const data = await res.json()
-    if (data.data?.url) window.location.href = data.data.url
+    setBillingError('')
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' })
+      const data = await res.json()
+      if (data.data?.url) {
+        window.location.href = data.data.url
+        return
+      }
+      setBillingError(data.error || 'Could not open the billing portal.')
+    } catch {
+      setBillingError('Could not open the billing portal.')
+    }
     setLoading(null)
   }
 
@@ -47,6 +91,18 @@ export default function BillingPage() {
         <h1 className="text-3xl font-bold text-white">Billing</h1>
         <p className="text-gray-400 mt-1">Manage your subscription and usage</p>
       </div>
+
+      {showSuccess && (
+        <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+          🎉 Payment successful! Your plan is being upgraded — this page will reflect it within a few seconds.
+        </div>
+      )}
+
+      {billingError && (
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+          {billingError}
+        </div>
+      )}
 
       {/* Current Plan */}
       <Card className="bg-navy-800 border-white/10">
@@ -82,8 +138,8 @@ export default function BillingPage() {
         <CardHeader><CardTitle className="text-white">Usage This Month</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-            <div><p className="text-gray-400 text-sm mb-1">Active Events</p><p className="text-2xl font-bold text-white">—</p><p className="text-xs text-gray-500">of {features.maxEvents === 9999 ? '∞' : features.maxEvents} max</p></div>
-            <div><p className="text-gray-400 text-sm mb-1">AI Calls Today</p><p className="text-2xl font-bold text-white">—</p><p className="text-xs text-gray-500">of {features.dailyAICalls === 9999 ? '∞' : features.dailyAICalls} daily</p></div>
+            <div><p className="text-gray-400 text-sm mb-1">Active Events</p><p className="text-2xl font-bold text-white">{usage ? usage.activeEvents : '…'}</p><p className="text-xs text-gray-500">of {features.maxEvents >= 999 ? '∞' : features.maxEvents} max</p></div>
+            <div><p className="text-gray-400 text-sm mb-1">AI Calls Today</p><p className="text-2xl font-bold text-white">{usage ? usage.aiCallsToday : '…'}</p><p className="text-xs text-gray-500">of {features.dailyAICalls >= 999 ? '∞' : features.dailyAICalls} daily</p></div>
             <div><p className="text-gray-400 text-sm mb-1">Document Uploads</p><p className="text-2xl font-bold text-white">{features.documentUploads ? '✓' : '✗'}</p><p className="text-xs text-gray-500">{features.documentUploads ? 'Enabled' : 'Upgrade to Pro'}</p></div>
           </div>
         </CardContent>

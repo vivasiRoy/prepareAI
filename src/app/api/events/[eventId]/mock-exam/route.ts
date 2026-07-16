@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { generateLLMResponse } from '@/lib/llm/providers'
+import { PLAN_FEATURES } from '@/types'
 
 // POST /api/events/[eventId]/mock-exam
 // body: { phase: 'generate', count?: number }
@@ -9,6 +10,13 @@ import { generateLLMResponse } from '@/lib/llm/providers'
 export async function POST(req: Request, { params }: { params: { eventId: string } }) {
   const session = await getServerSession()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  if (!PLAN_FEATURES[session.user.plan].simulations) {
+    return NextResponse.json(
+      { error: 'Mock exams are a Pro feature. Upgrade to unlock full simulated exams with AI feedback.', code: 'UPGRADE_REQUIRED', success: false },
+      { status: 403 }
+    )
+  }
 
   const body = await req.json()
   const { phase } = body
@@ -121,12 +129,12 @@ Return ONLY valid JSON, no markdown:
 
     const response = await generateLLMResponse({
       provider: 'anthropic',
-      model: 'claude-sonnet-4-5-20251001',
       messages: [{ role: 'user', content: prompt }],
       maxTokens: 4000,
       temperature: 0.7,
       feature: 'mock-exam-generate',
       userId: session.user.id,
+      userPlan: session.user.plan,
     })
 
     let questions
@@ -198,12 +206,12 @@ Return ONLY valid JSON:
 
     const evalResponse = await generateLLMResponse({
       provider: 'anthropic',
-      model: 'claude-sonnet-4-5-20251001',
       messages: [{ role: 'user', content: evalPrompt }],
       maxTokens: 3000,
       temperature: 0.3,
       feature: 'mock-exam-evaluate',
       userId: session.user.id,
+      userPlan: session.user.plan,
     })
 
     let evaluation

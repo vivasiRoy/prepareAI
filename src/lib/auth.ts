@@ -5,21 +5,36 @@ import GithubProvider from 'next-auth/providers/github'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
-import type { Role, Plan } from '@prisma/client'
+import type { Role, Plan } from '@/generated/prisma'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as NextAuthOptions['adapter'],
+  adapter: PrismaAdapter(prisma as any) as NextAuthOptions['adapter'],
   session: { strategy: 'jwt' },
   pages: { signIn: '/signin' },
+  // Firebase Hosting strips ALL cookies except one named `__session` before
+  // forwarding requests to the Cloud Function (to keep the CDN cacheable). So
+  // the NextAuth session cookie MUST be named `__session`, otherwise it is
+  // dropped on GET requests and the server never sees the logged-in session.
+  cookies: {
+    sessionToken: {
+      name: '__session',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true,
+      },
+    },
+  },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    GithubProvider({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })] : []),
+    ...(process.env.GITHUB_CLIENT_ID && process.env.GITHUB_CLIENT_SECRET ? [GithubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    })] : []),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -28,8 +43,11 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
+        // Sign-in only verifies existing accounts. Account creation goes
+        // through POST /api/auth/register — auto-creating here would let
+        // anyone claim an arbitrary email address on first sign-in.
         const user = await prisma.user.findUnique({ where: { email: credentials.email } })
-        if (!user || !user.password) return null
+        if (!user?.password) return null
         const valid = await bcrypt.compare(credentials.password, user.password)
         if (!valid) return null
         return user
@@ -37,12 +55,24 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id
-        const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true, plan: true } })
-        if (dbUser?.role) token.role = dbUser.role
-        if (dbUser?.plan) token.plan = dbUser.plan
+      }
+      // Refresh role/plan from the DB at most every 30s (and on session
+      // update). Without this, a Stripe upgrade wouldn't reach the JWT until
+      // the user signed out and back in, so plan limits would still apply.
+      const refreshedAt = (token.planRefreshedAt as number) || 0
+      if (user || trigger === 'update' || Date.now() - refreshedAt > 30_000) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, plan: true },
+        })
+        if (dbUser) {
+          token.role = dbUser.role
+          token.plan = dbUser.plan
+        }
+        token.planRefreshedAt = Date.now()
       }
       return token
     },
@@ -96,5 +126,6 @@ declare module 'next-auth/jwt' {
     id: string
     role: Role
     plan: Plan
+    planRefreshedAt?: number
   }
 }

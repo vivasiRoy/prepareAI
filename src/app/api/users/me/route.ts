@@ -7,16 +7,26 @@ export async function GET() {
   const session = await getServerSession()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      id: true, name: true, email: true, image: true, role: true, plan: true, createdAt: true,
-      subscription: true,
-      _count: { select: { events: { where: { status: 'ACTIVE' } } } },
-    },
-  })
+  const startOfDay = new Date()
+  startOfDay.setHours(0, 0, 0, 0)
+  const startOfMonth = new Date()
+  startOfMonth.setDate(1)
+  startOfMonth.setHours(0, 0, 0, 0)
 
-  return NextResponse.json({ data: user, success: true })
+  const [user, aiCallsToday, aiCallsMonth] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        id: true, name: true, email: true, image: true, role: true, plan: true, createdAt: true,
+        subscription: true,
+        _count: { select: { events: { where: { status: 'ACTIVE' } } } },
+      },
+    }),
+    prisma.lLMUsageLog.count({ where: { userId: session.user.id, createdAt: { gte: startOfDay } } }),
+    prisma.lLMUsageLog.count({ where: { userId: session.user.id, createdAt: { gte: startOfMonth } } }),
+  ])
+
+  return NextResponse.json({ data: { ...user, usage: { aiCallsToday, aiCallsMonth } }, success: true })
 }
 
 const updateSchema = z.object({

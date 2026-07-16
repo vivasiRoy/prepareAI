@@ -3,10 +3,8 @@ import { getServerSession } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { processDocument } from '@/lib/engine/contentGenerator'
 import { PLAN_FEATURES } from '@/types'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 
-const ALLOWED_TYPES = ['application/pdf', 'text/plain', 'text/markdown']
+const ALLOWED_TYPES = ['text/plain', 'text/markdown', 'text/csv']
 const MAX_SIZE = 10 * 1024 * 1024
 
 export async function POST(req: Request) {
@@ -23,17 +21,16 @@ export async function POST(req: Request) {
 
   if (!file || !eventId) return NextResponse.json({ error: 'File and eventId required', success: false }, { status: 400 })
   if (file.size > MAX_SIZE) return NextResponse.json({ error: 'File too large (max 10MB)', success: false }, { status: 400 })
+  if (file.type && !ALLOWED_TYPES.includes(file.type)) {
+    return NextResponse.json({ error: 'Unsupported file type. Upload plain text, markdown, or CSV.', success: false }, { status: 400 })
+  }
 
   const event = await prisma.event.findFirst({ where: { id: eventId, userId: session.user.id } })
   if (!event) return NextResponse.json({ error: 'Event not found' }, { status: 404 })
 
-  const uploadDir = join(process.cwd(), 'public', 'uploads', session.user.id)
-  await mkdir(uploadDir, { recursive: true })
-  const filename = `${Date.now()}-${file.name.replace(/[^a-z0-9.-]/gi, '_')}`
-  const filepath = join(uploadDir, filename)
+  // Content is stored in the DB, not on disk — the serverless filesystem is
+  // read-only and doesn't persist between instances.
   const buffer = Buffer.from(await file.arrayBuffer())
-  await writeFile(filepath, buffer)
-
   const textContent = buffer.toString('utf-8').slice(0, 20000)
   const extracted = await processDocument(textContent, file.name)
 
@@ -42,7 +39,6 @@ export async function POST(req: Request) {
       eventId,
       type: 'DOCUMENT',
       name: file.name,
-      url: `/uploads/${session.user.id}/${filename}`,
       content: textContent.slice(0, 10000),
       extractedContent: JSON.stringify(extracted),
       processed: true,

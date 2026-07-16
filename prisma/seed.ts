@@ -4,6 +4,7 @@ import { Pool, neonConfig } from '@neondatabase/serverless'
 // @ts-ignore
 import ws from 'ws'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'crypto'
 
 if (typeof WebSocket === 'undefined') neonConfig.webSocketConstructor = ws
 const pool = new Pool({ connectionString: process.env.DATABASE_URL! })
@@ -13,7 +14,14 @@ const prisma = new PrismaClient({ adapter } as any)
 async function main() {
   console.log('🌱 Seeding database...')
 
-  const adminPassword = await bcrypt.hash('admin123!', 12)
+  // Never hardcode the admin password — this repo is public. Provide it via
+  // SEED_ADMIN_PASSWORD, or a random one is generated and printed once.
+  const rawAdminPassword = process.env.SEED_ADMIN_PASSWORD
+    || randomBytes(12).toString('base64url')
+  if (!process.env.SEED_ADMIN_PASSWORD) {
+    console.log(`🔑 Generated admin password (save it now): ${rawAdminPassword}`)
+  }
+  const adminPassword = await bcrypt.hash(rawAdminPassword, 12)
   const admin = await prisma.user.upsert({
     where: { email: 'royvivasi@gmail.com' },
     update: {},

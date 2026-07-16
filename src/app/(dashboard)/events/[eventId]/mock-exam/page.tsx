@@ -74,6 +74,8 @@ export default function MockExamPage() {
     return () => clearInterval(interval)
   }, [phase])
 
+  const [upgradeRequired, setUpgradeRequired] = useState(false)
+
   const generate = useCallback(async () => {
     setPhase('generating')
     setError('')
@@ -84,6 +86,11 @@ export default function MockExamPage() {
         body: JSON.stringify({ phase: 'generate', count: examCount }),
       })
       const data = await res.json()
+      if (res.status === 403 && data.code === 'UPGRADE_REQUIRED') {
+        setUpgradeRequired(true)
+        setPhase('setup')
+        return
+      }
       if (!res.ok || !data.success) throw new Error(data.error || 'Generation failed')
       setExamData(data.data)
       setAnswers(new Array(data.data.questions.length).fill(''))
@@ -157,6 +164,19 @@ export default function MockExamPage() {
           <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 shrink-0" />
             {error}
+          </div>
+        )}
+
+        {upgradeRequired && (
+          <div className="p-6 rounded-xl bg-violet-500/10 border border-violet-500/30 text-center space-y-3">
+            <div className="text-3xl">⚡</div>
+            <h3 className="text-lg font-semibold text-white">Mock exams are a Pro feature</h3>
+            <p className="text-gray-400 text-sm max-w-md mx-auto">
+              Upgrade to Pro to unlock full simulated exams with AI scoring, weak-topic analysis, and readiness tracking.
+            </p>
+            <Link href="/billing">
+              <Button variant="gradient" className="mt-2"><Zap className="w-4 h-4 mr-2" /> Upgrade to Pro</Button>
+            </Link>
           </div>
         )}
 

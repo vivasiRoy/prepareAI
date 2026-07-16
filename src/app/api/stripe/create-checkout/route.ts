@@ -10,6 +10,13 @@ export async function POST(req: Request) {
   const session = await getServerSession()
   if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PRO_PRICE_ID) {
+    return NextResponse.json(
+      { error: 'Payments are not yet enabled. Please check back soon.', success: false },
+      { status: 503 }
+    )
+  }
+
   const body = await req.json()
   const parsed = schema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: 'Invalid plan', success: false }, { status: 400 })

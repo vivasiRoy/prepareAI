@@ -4,8 +4,13 @@ const globalForRedis = globalThis as unknown as { redis: Redis }
 
 function createRedisClient(): Redis {
   const client = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-    maxRetriesPerRequest: 3,
+    // Fail fast: if Redis is unreachable, requests must not stall behind the
+    // offline queue — every caller has a graceful "allow" fallback.
+    maxRetriesPerRequest: 1,
+    connectTimeout: 2000,
+    enableOfflineQueue: false,
     lazyConnect: true,
+    retryStrategy: (times) => Math.min(times * 500, 5000),
   })
   client.on('error', (err) => console.error('[Redis]', err.message))
   return client
@@ -49,12 +54,18 @@ export async function getRateLimit(
 ): Promise<{ allowed: boolean; remaining: number; resetIn: number }> {
   const key = "rl:" + userId + ":" + feature
   try {
-    const current = await redis.incr(key)
-    if (current === 1) await redis.expire(key, windowSecs)
-    const ttl = await redis.ttl(key)
-    const remaining = Math.max(0, limit - current)
-    return { allowed: current <= limit, remaining, resetIn: ttl }
-  } catch {
-    return { allowed: true, remaining: limit, resetIn: windowSecs }
-  }
+    // Hard 1.5s ceiling — a slow/unreachable Redis must never stall a request.
+    const result = await Promise.race([
+      (async () => {
+        const current = await redis.incr(key)
+        if (current === 1) await redis.expire(key, windowSecs)
+        const ttl = await redis.ttl(key)
+        const remaining = Math.max(0, limit - current)
+        return { allowed: current <= limit, remaining, resetIn: ttl }
+      })(),
+      new Promise<null>(resolve => setTimeout(() => resolve(null), 1500)),
+    ])
+    if (result) return result
+  } catch {}
+  return { allowed: true, remaining: limit, resetIn: windowSecs }
 }

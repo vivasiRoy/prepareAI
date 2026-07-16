@@ -4,10 +4,15 @@ import { estimateCost } from './providers'
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+// Opus 4.7+, Sonnet 5, and Fable 5 reject sampling params (temperature/top_p)
+// with a 400 — only send temperature to models that still accept it.
+function acceptsTemperature(model: string): boolean {
+  return !/opus-4-[78]|sonnet-5|fable/.test(model)
+}
+
 export async function callAnthropic(options: LLMRequestOptions): Promise<LLMResponse> {
-  const model = options.model || process.env.DEFAULT_MODEL || 'claude-sonnet-4-5-20251001'
+  const model = options.model || process.env.DEFAULT_MODEL || 'claude-sonnet-4-6'
   const maxTokens = options.maxTokens || 4096
-  const temperature = options.temperature ?? 0.7
 
   const messages = options.messages
     .filter(m => m.role !== 'system')
@@ -20,7 +25,7 @@ export async function callAnthropic(options: LLMRequestOptions): Promise<LLMResp
   const response = await client.messages.create({
     model,
     max_tokens: maxTokens,
-    temperature,
+    ...(acceptsTemperature(model) ? { temperature: options.temperature ?? 0.7 } : {}),
     system: systemContent,
     messages,
   })
@@ -40,7 +45,7 @@ export async function callAnthropic(options: LLMRequestOptions): Promise<LLMResp
 }
 
 export async function streamAnthropic(options: LLMRequestOptions): Promise<ReadableStream> {
-  const model = options.model || process.env.DEFAULT_MODEL || 'claude-sonnet-4-5-20251001'
+  const model = options.model || process.env.DEFAULT_MODEL || 'claude-sonnet-4-6'
   const maxTokens = options.maxTokens || 4096
 
   const messages = options.messages
