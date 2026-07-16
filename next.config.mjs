@@ -20,6 +20,19 @@ const baseConfig = {
       'bcryptjs',
     ],
   },
+  async headers() {
+    return [
+      {
+        // API responses are per-user and must never be cached by the CDN.
+        // Firebase's CDN cached a curriculum 404 (max-age=600) and served it
+        // across requests — this makes no-store explicit on every API route.
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-store, max-age=0' },
+        ],
+      },
+    ]
+  },
 }
 
 export default function config(phase) {
