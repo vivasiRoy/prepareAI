@@ -50,3 +50,5 @@ prismaAPIdets.txt
 
 # firebase local cache
 .firebase/
+.env.local.devonly
+.env*.devonly

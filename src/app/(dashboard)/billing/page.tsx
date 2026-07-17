@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { PLAN_FEATURES } from '@/types'
+import { ttqTrack } from '@/components/shared/TikTokPixel'
 
 const planDetails = {
   FREE: { name: 'Free', price: '$0', color: 'text-gray-400', features: ['1 active event', '10 AI calls/day', 'Basic curriculum'] },
@@ -41,6 +42,19 @@ export default function BillingPage() {
     if (params.get('success') === 'true') {
       setShowSuccess(true)
       updateSession().catch(() => {})
+      // Report the purchase to TikTok ads once (refreshing the success URL
+      // must not double-count the conversion).
+      try {
+        if (!sessionStorage.getItem('ttq-purchase')) {
+          sessionStorage.setItem('ttq-purchase', '1')
+          const paidPlan = params.get('plan')
+          ttqTrack('CompletePayment', {
+            content_name: paidPlan || 'subscription',
+            value: paidPlan === 'ENTERPRISE' ? 99 : 29,
+            currency: 'USD',
+          })
+        }
+      } catch {}
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -50,6 +64,7 @@ export default function BillingPage() {
   const handleUpgrade = async (plan: 'PRO' | 'ENTERPRISE') => {
     setLoading(plan)
     setBillingError('')
+    ttqTrack('InitiateCheckout', { content_name: plan, value: plan === 'ENTERPRISE' ? 99 : 29, currency: 'USD' })
     try {
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',

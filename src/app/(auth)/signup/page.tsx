@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
+import { ttqTrack } from '@/components/shared/TikTokPixel'
 
 export default function SignUpPage() {
   const [name, setName] = useState('')
@@ -59,6 +60,7 @@ export default function SignUpPage() {
       return
     }
     try { localStorage.removeItem('prepareai.ref') } catch {}
+    ttqTrack('CompleteRegistration', { content_name: 'signup' })
     await signIn('credentials', { email, password, callbackUrl: '/dashboard' })
   }
 

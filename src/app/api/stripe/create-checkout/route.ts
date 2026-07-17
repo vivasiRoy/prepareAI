@@ -32,7 +32,7 @@ export async function POST(req: Request) {
   const checkoutSession = await createCheckoutSession(
     user,
     parsed.data.plan,
-    `${appUrl}/billing?success=true`,
+    `${appUrl}/billing?success=true&plan=${parsed.data.plan}`,
     `${appUrl}/billing?canceled=true`
   )
 
