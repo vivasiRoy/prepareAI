@@ -11,13 +11,17 @@ const baseConfig = {
     ],
   },
   experimental: {
-    // NOTE: @prisma/client and @prisma/extension-accelerate are intentionally
-    // NOT external. With `prisma generate --no-engine` the client is pure JS
-    // (no native engine binary), so webpack bundles it straight into .next.
-    // This is what makes it survive Firebase's fresh cloud dependency install,
-    // which would otherwise leave node_modules/.prisma/client as a stub.
+    // Prisma runs as an EXTERNAL package (canonical Next.js setup): the
+    // generated client + engine binaries live in node_modules and are traced
+    // into the standalone output by Next, including the Linux engines from
+    // binaryTargets. (Changed from the webpack-bundled --no-engine
+    // Accelerate-only setup during the 2026-07-17 Prisma outage failover.)
     serverComponentsExternalPackages: [
       'bcryptjs',
+      '@prisma/client',
+      '@prisma/adapter-neon',
+      '@neondatabase/serverless',
+      'ws',
     ],
   },
   async headers() {
@@ -36,13 +40,12 @@ const baseConfig = {
 }
 
 export default function config(phase) {
-  // Generate a no-engine Prisma client for Accelerate during `next build`
-  // (Firebase runs `next build` directly). --no-engine means no query engine
-  // binary is bundled — the client talks to Accelerate over HTTP.
+  // Generate the Prisma client (with Linux engines per binaryTargets) during
+  // `next build` so the standalone output traces everything it needs.
   if (phase === PHASE_PRODUCTION_BUILD && !global.__prismaGenerated) {
     global.__prismaGenerated = true
     try {
-      execSync('npx prisma generate --no-engine', { stdio: 'inherit' })
+      execSync('npx prisma generate', { stdio: 'inherit' })
     } catch (e) {
       console.error('prisma generate failed during next build:', e)
     }

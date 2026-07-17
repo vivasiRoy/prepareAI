@@ -1,4 +1,4 @@
-import type { User, Event, EventType, EventStatus, Plan, Role, LessonType, QuizType, Attempt, EventMaterial, EventGoal, Curriculum, Lesson, Quiz, PerformanceMetrics, Subscription } from '@/generated/prisma'
+import type { User, Event, EventType, EventStatus, Plan, Role, LessonType, QuizType, Attempt, EventMaterial, EventGoal, Curriculum, Lesson, Quiz, PerformanceMetrics, Subscription } from '@prisma/client'
 
 export type { User, Event, EventType, EventStatus, Plan, Role, LessonType, QuizType, Attempt, EventMaterial, EventGoal, Curriculum, Lesson, Quiz, PerformanceMetrics, Subscription }
 

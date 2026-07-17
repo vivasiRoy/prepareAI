@@ -1,5 +1,5 @@
 import { generateLLMResponse } from '@/lib/llm/providers'
-import type { EventType, LessonType, QuizType } from '@/generated/prisma'
+import type { EventType, LessonType, QuizType } from '@prisma/client'
 import type { FlashCard, GeneratedQuiz, GeneratedLessonContent } from '@/types'
 
 export async function generateFlashCards(

@@ -1,6 +1,6 @@
 import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
-import type { User, Plan } from '@/generated/prisma'
+import type { User, Plan } from '@prisma/client'
 
 let _stripe: Stripe | null = null
 

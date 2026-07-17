@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { generateLLMResponse } from '@/lib/llm/providers'
-import type { Attempt, Quiz } from '@/generated/prisma'
+import type { Attempt, Quiz } from '@prisma/client'
 import { calculateSuccessProbability } from '@/lib/utils'
 
 export async function calculateSuccessScore(userId: string, eventId: string): Promise<number> {

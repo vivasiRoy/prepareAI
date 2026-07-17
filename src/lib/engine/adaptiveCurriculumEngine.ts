@@ -5,7 +5,7 @@ import { getDomainTemplate } from '@/templates/domains'
 import { prisma } from '@/lib/prisma'
 import { languageDirective } from '@/lib/i18n'
 import type { EventWithRelations, GeneratedLesson } from '@/types'
-import type { LessonType, Plan } from '@/generated/prisma'
+import type { LessonType, Plan } from '@prisma/client'
 
 function calculateDaysUntil(targetDate: Date): number {
   const now = new Date()
