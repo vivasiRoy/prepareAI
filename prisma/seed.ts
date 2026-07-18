@@ -7,7 +7,8 @@ import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 
 if (typeof WebSocket === 'undefined') neonConfig.webSocketConstructor = ws
-const adapter = new PrismaNeon({ connectionString: process.env.NEON_DATABASE_URL || process.env.DATABASE_URL! })
+const pool = new Pool({ connectionString: process.env.DATABASE_URL! })
+const adapter = new PrismaNeon(pool)
 const prisma = new PrismaClient({ adapter } as any)
 
 async function main() {
@@ -168,7 +169,7 @@ async function main() {
 
   console.log('\n🎉 Seeding complete!')
   console.log('\nCredentials:')
-  console.log('  Admin: royvivasi@gmail.com / (password printed above)')
+  console.log('  Admin: royvivasi@gmail.com / admin123!')
   console.log('  Demo:  demo@prepareai.com  / demo123!')
 }
 

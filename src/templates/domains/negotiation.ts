@@ -1,5 +1,5 @@
 import type { DomainTemplate } from '@/types'
-import { EventType } from '@prisma/client'
+import { EventType } from '@/generated/prisma'
 
 export const negotiationTemplate: DomainTemplate = {
   id: 'negotiation',
